@@ -4,7 +4,6 @@ from flask import Flask, request, jsonify
 from flask_restful import Api
 from flask_cors import CORS
 
-from brain import recommend_text
 
 load_dotenv()
 
@@ -13,7 +12,7 @@ CORS(app)
 api = Api(app)
 
 
-@app.route("/chat", methods=["POST"])
+@app.route("/search", methods=["POST"])
 def chat():
     data = request.get_json()
     query = data.get("message", "").strip()
