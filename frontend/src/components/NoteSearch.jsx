@@ -9,6 +9,10 @@ export default function NoteSearch() {
     setSelectedNotes(selectedNotes.filter((n) => n !== note));
   };
 
+  const search = () => {
+    console.log(selectedNotes);
+  };
+
   return (
     <div>
       <h1>Find your fragrance</h1>
@@ -23,6 +27,7 @@ export default function NoteSearch() {
       <NoteSearchBar
         selectedNotes={selectedNotes}
         setSelectedNotes={setSelectedNotes}
+        triggerSearch={search}
       />
     </div>
   );

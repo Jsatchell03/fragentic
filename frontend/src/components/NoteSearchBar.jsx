@@ -344,34 +344,46 @@ export default function NoteSearchBar(props) {
 
   return (
     <div className="relative w-full flex">
-      <input
-        type="text"
-        onChange={handleChange}
-        value={searchTerm}
-        placeholder="Type a fragrance note (e.g., vanilla, rose, sandalwood)..."
+      <div
         className="
-          flex-1
-          rounded-l-xl
+          relative w-full
+          rounded-xl 
           border border-gray-300 
-          px-4 py-3 
-          text-gray-700 
-          placeholder-gray-400 
           shadow-sm
-        "
-      />
-      <button
-        className="
-          bg-purple-600 
-          hover:bg-purple-700 
-          text-white 
-          font-medium 
-          px-6 
-          rounded-r-xl 
-          shadow-sm
+          focus-within:border-purple-600 
+          transition
         "
       >
-        Search
-      </button>
+        <input
+          type="text"
+          onChange={handleChange}
+          value={searchTerm}
+          placeholder="Type a fragrance note (e.g., vanilla, rose, sandalwood)..."
+          className="
+            w-full
+            rounded-xl
+            px-4 py-3 pr-24
+            text-gray-700 
+            placeholder-gray-400 
+            focus:outline-none
+          "
+        />
+        <button
+          onClick={props.triggerSearch}
+          className="
+            absolute top-1/2 right-2 -translate-y-1/2
+            bg-purple-600 
+            hover:bg-purple-700 
+            text-white 
+            font-medium 
+            px-4 py-2 
+            rounded-xl 
+            shadow-sm
+          "
+        >
+          Search
+        </button>
+      </div>
 
       {isOpen && filteredOptions.length > 0 && (
         <ul
@@ -414,7 +426,7 @@ export default function NoteSearchBar(props) {
             text-gray-500
           "
         >
-          No matching options found.
+          No matching notes found.
         </div>
       )}
     </div>

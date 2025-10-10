@@ -4,14 +4,15 @@ export default function NoteTag({ note, removeNote }) {
   return (
     <span
       className="
-        inline-flex items-center 
+        inline-flex
+        items-center 
         px-3 py-1 
-        text-sm font-medium 
+        text-sm
+        font-medium 
         text-purple-700 
         bg-purple-100 
         rounded-full 
         hover:bg-purple-200 
-        transition
         mr-2 mb-2
       "
     >
