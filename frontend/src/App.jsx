@@ -5,7 +5,7 @@ import Filters from "./components/Filters";
 function App() {
   return (
     <>
-      <NoteSearch />
+      {/* <NoteSearch /> */}
       <Filters />
     </>
   );
