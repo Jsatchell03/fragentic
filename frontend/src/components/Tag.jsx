@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function NoteTag({ note, removeNote }) {
+export default function Tag({ name, removeTag }) {
   return (
     <span
       className="
@@ -16,9 +16,9 @@ export default function NoteTag({ note, removeNote }) {
         mr-2 mb-2
       "
     >
-      {note}
+      {name}
       <button
-        onClick={() => removeNote(note)}
+        onClick={() => removeTag(name)}
         className="
           ml-2 
           text-purple-500 hover:text-purple-700 

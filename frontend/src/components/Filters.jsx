@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from "react";
 import FilterSearch from "./FilterSearch";
 
-export default function Filters() {
-  const API_URL = import.meta.env.VITE_BACKEND_URL;
-  useEffect(() => {
-    let notes = [];
-    let accords = [];
-    fetch(`${API_URL}/notes`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        notes = data;
-      });
-    fetch(`${API_URL}/accords`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        accords = data;
-      });
-  }, []);
+export default function Filters({
+  descriptors,
+  notes,
+  accords,
+  countries,
+  brands,
+}) {
+  const [currFilters, setCurrFilters] = useState({
+    "Exclude Descriptors": [],
+    "Country of Origin": [],
+    Brand: [],
+  });
+
   return (
     <aside
       className="
@@ -31,8 +26,27 @@ export default function Filters() {
       "
     >
       <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
-      <FilterSearch title={"Exclude Notes"} options={[]} />
-
+      <FilterSearch
+        title={"Exclude Descriptors"}
+        options={descriptors}
+        placeholder={"Search for a descriptor"}
+        currFilters={currFilters}
+        setCurrFilters={setCurrFilters}
+      />
+      <FilterSearch
+        title={"Country of Origin"}
+        options={countries}
+        placeholder={"Search for a country"}
+        currFilters={currFilters}
+        setCurrFilters={setCurrFilters}
+      />
+      <FilterSearch
+        title={"Brand"}
+        options={brands}
+        placeholder={"Search for a brand"}
+        currFilters={currFilters}
+        setCurrFilters={setCurrFilters}
+      />
       <button
         className="
           w-full

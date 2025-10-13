@@ -1,30 +1,42 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
-export default function NoteSearchBar(props) {
-  const selectedNotes = props.selectedNotes;
-  const setSelectedNotes = props.setSelectedNotes;
+export default function SearchBar({
+  selectedOptions,
+  updateSelectedOptions,
+  triggerSearch = null,
+  options,
+  placeholder,
+}) {
   const [searchTerm, setSearchTerm] = useState("");
-  const API_URL = import.meta.env.REACT_APP_BACKEND_URL;
-  useEffect(() => {
-    let notes = [];
-    let accords = [];
-    fetch(`${API_URL}/notes`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        notes = data;
-      });
-    fetch(`${API_URL}/accords`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        accords = data;
-      });
-  }, []);
   const [filteredOptions, setFilteredOptions] = useState(
-    options.filter((option) => !selectedNotes.includes(option.toLowerCase()))
+    options.filter((option) => !selectedOptions.includes(option.toLowerCase()))
   );
   const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setSearchTerm("");
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        setSearchTerm("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   const handleChange = (e) => {
     const val = e.target.value;
@@ -33,13 +45,13 @@ export default function NoteSearchBar(props) {
       const newFilteredOptions = options.filter(
         (option) =>
           option.toLowerCase().includes(val.toLowerCase()) &&
-          !selectedNotes.includes(option.toLowerCase())
+          !selectedOptions.includes(option.toLowerCase())
       );
       setFilteredOptions(newFilteredOptions.slice(0, 5));
     } else {
       setFilteredOptions(
         options
-          .filter((option) => !selectedNotes.includes(option.toLowerCase()))
+          .filter((option) => !selectedOptions.includes(option.toLowerCase()))
           .slice(0, 5)
       );
     }
@@ -47,13 +59,13 @@ export default function NoteSearchBar(props) {
   };
 
   const handleSelect = (val) => {
-    setSelectedNotes([...selectedNotes, val]);
+    updateSelectedOptions(val);
     setSearchTerm("");
     setIsOpen(false);
   };
 
   return (
-    <div className="relative w-full flex">
+    <div ref={wrapperRef} className="relative w-full flex">
       <div
         className="
           relative w-full
@@ -68,19 +80,20 @@ export default function NoteSearchBar(props) {
           type="text"
           onChange={handleChange}
           value={searchTerm}
-          placeholder="Type a fragrance note (e.g., vanilla, rose, sandalwood)..."
-          className="
+          placeholder={placeholder}
+          className={`
             w-full
             rounded-xl
-            px-4 py-3 pr-24
+            px-4 py-3 ${triggerSearch && "pr-24"}
             text-gray-700 
             placeholder-gray-400 
             focus:outline-none
-          "
+          `}
         />
-        <button
-          onClick={props.triggerSearch}
-          className="
+        {triggerSearch && (
+          <button
+            onClick={triggerSearch}
+            className="
             absolute top-1/2 right-2 -translate-y-1/2
             bg-purple-600 
             hover:bg-purple-700 
@@ -90,12 +103,13 @@ export default function NoteSearchBar(props) {
             rounded-xl 
             shadow-sm
           "
-        >
-          Search
-        </button>
+          >
+            Search
+          </button>
+        )}
       </div>
 
-      {isOpen && filteredOptions.length > 0 && (
+      {isOpen && filteredOptions.length > 0 && searchTerm.length > 0 && (
         <ul
           className="
             absolute top-full left-0 mt-2 w-full 
@@ -132,11 +146,11 @@ export default function NoteSearchBar(props) {
             border border-gray-200 
             rounded-xl 
             shadow-lg 
-            px-4 py-2 
+            px-4 py-2 z-10
             text-gray-500
           "
         >
-          No matching notes found.
+          No matching options found.
         </div>
       )}
     </div>

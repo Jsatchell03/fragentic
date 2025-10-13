@@ -1,12 +1,17 @@
 import React, { useState } from "react";
-import NoteSearchBar from "./NoteSearchBar";
-import NoteTag from "./NoteTag";
+import SearchBar from "./SearchBar";
+import Tag from "./Tag";
 
-export default function NoteSearch() {
+export default function NoteSearch({ descriptors }) {
   const [selectedNotes, setSelectedNotes] = useState([]);
 
   const removeNote = (note) => {
     setSelectedNotes(selectedNotes.filter((n) => n !== note));
+  };
+
+  const updateSelectedNotes = (note) => {
+    let newSelectedNotes = [...selectedNotes, note];
+    setSelectedNotes(newSelectedNotes);
   };
 
   const search = () => {
@@ -14,20 +19,32 @@ export default function NoteSearch() {
   };
 
   return (
-    <div>
-      <h1>Find your fragrance</h1>
+    <div
+      className="
+        bg-white
+        rounded-xl
+        shadow-md
+        mx-5
+        my-5 p-4
+      "
+    >
+      <h2 className="text-lg font-semibold text-gray-800 pb-6">
+        Find your fragrance
+      </h2>
+
       <p>
-        Descibe the notes of your fragrance and Fragentic will find the top
-        matches
+        Descibe the notes and accords of your fragrance and Fragentic will find
+        the top matches
       </p>
       {selectedNotes.length > 0 &&
         selectedNotes.map((note, index) => (
-          <NoteTag note={note} key={index} removeNote={removeNote} />
+          <Tag name={note} key={index} removeTag={removeNote} />
         ))}
-      <NoteSearchBar
-        selectedNotes={selectedNotes}
-        setSelectedNotes={setSelectedNotes}
+      <SearchBar
+        selectedOptions={selectedNotes}
+        updateSelectedOptions={updateSelectedNotes}
         triggerSearch={search}
+        options={descriptors}
       />
     </div>
   );

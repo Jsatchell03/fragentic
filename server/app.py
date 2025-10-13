@@ -50,7 +50,9 @@ def get_filters():
     ]
     data["notes"] = [{"name": x["name"]} for x in list(frag_db["notes"].find({}))]
     data["accords"] = [{"name": x["name"]} for x in list(frag_db["accords"].find({}))]
-    data["descriptors"] = data["notes"] + data["accords"]
+    data["descriptors"] = list(
+        {x["name"] for x in data["notes"]} | {x["name"] for x in data["accords"]}
+    )
     return jsonify(data)
 
 
