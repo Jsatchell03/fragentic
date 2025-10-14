@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Tag({ name, removeTag }) {
+export default function Tag({ name, removeTag, optionCleaner = null }) {
   return (
     <span
       className="
@@ -16,7 +16,7 @@ export default function Tag({ name, removeTag }) {
         mr-2 mb-2
       "
     >
-      {name}
+      {optionCleaner ? optionCleaner(name) : name}
       <button
         onClick={() => removeTag(name)}
         className="

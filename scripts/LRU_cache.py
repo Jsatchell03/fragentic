@@ -42,7 +42,8 @@ class LRUCache:
             print("Cache Miss")
             return None
         value = self.cache.pop(key)
-        self.cache[key] = value  # move to end (most recently used)
+        self.cache[key] = value
+        print("Cache Hit")
         return value
 
     def put(self, key, value):

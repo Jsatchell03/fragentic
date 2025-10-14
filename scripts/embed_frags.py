@@ -15,25 +15,50 @@ load_dotenv(dotenv_path)
 
 df = pd.read_csv("../data/fra_cleaned.csv", encoding="Windows-1252", sep=";")
 df_sorted = df.sort_values(by="Rating Count", ascending=False)
-df = df_sorted[:1000]
+df = df_sorted[:10000]
 
 unclean_df = pd.read_csv("../data/fra_perfumes.csv", encoding="utf-8", sep=",")
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 mongodb_client = MongoClient(os.getenv("MONGODB_CONNECTION_STRING"))
 
-fragrences_db = mongodb_client["fragrences_db"]
-fragrences_collection = fragrences_db["fragrences"]
-accords_collection = fragrences_db["accords"]
-notes_collection = fragrences_db["notes"]
-brands_collection = fragrences_db["brands"]
-countries_collection = fragrences_db["countries"]
+fragrance_db = mongodb_client["fragrance_db"]
+fragrances_collection = fragrance_db["fragrances"]
+accords_collection = fragrance_db["accords"]
+notes_collection = fragrance_db["notes"]
+brands_collection = fragrance_db["brands"]
+countries_collection = fragrance_db["countries"]
+
+pretentiousDescriptors = {
+    "wild lavender": "lavender",
+    "citruses": "citrus",
+    "woodsy notes": "woody",
+    "precious woods": "woody",
+    "sweet notes": "sweet",
+    "green accord": "green",
+    "cedar essence": "cedar",
+    "cedarwood": "cedar",
+    "california orange": "orange",
+    "oriental notes": "oriental notes",
+    "mastic or lentisque": "mastic",
+}
+
+
+def parseDescriptor(descriptor):
+    extra_words = ["accord", "notes"]
+    if descriptor in pretentiousDescriptors:
+        return pretentiousDescriptors[descriptor]
+    pattern = r"\b(?:" + "|".join(extra_words) + r")\b\.?$"
+    cleaned = re.sub(pattern, "", descriptor, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(r"[\s,;]+$", "", cleaned)
+    return cleaned
+
 
 # Indexes
-fragrences_collection.create_index({"brand": 1})
-fragrences_collection.create_index({"country": 1})
-fragrences_collection.create_index({"ratingCount": 1})
-fragrences_collection.create_index("url", unique=True)
+fragrances_collection.create_index({"brand": 1})
+fragrances_collection.create_index({"country": 1})
+fragrances_collection.create_index({"ratingCount": 1})
+fragrances_collection.create_index("url", unique=True)
 
 w_top, w_mid, w_base = 0.25, 0.30, 0.45
 w_notes, w_accords = 0.4, 0.6
@@ -150,10 +175,10 @@ for _, row in df.iterrows():
     res["gender"] = safe_str(row.get("Gender"))
     res["country"] = safe_str(row.get("Country"))
 
-    res["topNotes"] = safe_list(row.get("Top"))
-    res["midNotes"] = safe_list(row.get("Middle"))
-    res["baseNotes"] = safe_list(row.get("Base"))
-    res["accords"] = safe_accords(res["url"])
+    res["topNotes"] = [parseDescriptor(x) for x in safe_list(row.get("Top"))]
+    res["midNotes"] = [parseDescriptor(x) for x in safe_list(row.get("Middle"))]
+    res["baseNotes"] = [parseDescriptor(x) for x in safe_list(row.get("Base"))]
+    res["accords"] = [parseDescriptor(x) for x in safe_accords(res["url"])]
 
     res["topNotesVector"] = average_embeddings(
         embed_list_cached(res["topNotes"])
@@ -186,7 +211,7 @@ for _, row in df.iterrows():
     all_accords.update(res["accords"])
 
     # Upsert fragrance
-    fragrences_collection.update_one(
+    fragrances_collection.update_one(
         {"url": res["url"]}, {"$setOnInsert": res}, upsert=True
     )
     print(f"{res["name"]} added")

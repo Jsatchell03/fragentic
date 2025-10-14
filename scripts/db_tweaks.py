@@ -20,3 +20,5 @@ mongodb_client = MongoClient(os.getenv("MONGODB_CONNECTION_STRING"))
 #     docs = list(old_collection.find({}))
 #     if docs:
 #         new_collection.insert_many(docs)
+
+db = mongodb_client["fragrances_db"]

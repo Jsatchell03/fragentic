@@ -4,6 +4,7 @@ export default function SearchBar({
   selectedOptions,
   updateSelectedOptions,
   triggerSearch = null,
+  optionCleaner = null,
   options,
   placeholder,
 }) {
@@ -132,7 +133,7 @@ export default function SearchBar({
                 cursor-pointer
               "
             >
-              {option}
+              {optionCleaner ? optionCleaner(option) : option}
             </li>
           ))}
         </ul>
