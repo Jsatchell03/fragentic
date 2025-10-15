@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import FilterSearch from "./FilterSearch";
 import FilterSelect from "./FilterSelect";
 import FilterRating from "./FilterRating";
+import FilterRange from "./FilterRange";
 export default function Filters({
   descriptors,
   notes,
@@ -9,15 +10,31 @@ export default function Filters({
   countries,
   brands,
   currQuery,
-  setQuery,
+  selectedFilters,
+  setSelectedFilters,
+  updateQuery,
 }) {
-  const [currFilters, setCurrFilters] = useState(currQuery["filters"]);
+  const currFilters = selectedFilters || {
+    "Exclude Notes/Accords": [],
+    "Country of Origin": [],
+    Brand: [],
+    Gender: [],
+    Popularity: [],
+    PopularityRange: [],
+    Rating: 1,
+  };
   function capitalizeBrand(name) {
     return name
       .split("-") // split into words
       .map((word) => word[0].toUpperCase() + word.slice(1)) // capitalize first letter
       .join(" ");
   }
+
+  function cleanCountryName(name) {
+    return name.toUpperCase();
+  }
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <aside
       className="
@@ -28,7 +45,6 @@ export default function Filters({
         px-4 py-4
         mx-4
         space-y-6
-        mb-16
       "
     >
       <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
@@ -36,46 +52,41 @@ export default function Filters({
         title={"Gender"}
         options={["For Men", "For Women", "Unisex"]}
         currFilters={currFilters}
-        setCurrFilters={setCurrFilters}
+        setCurrFilters={setSelectedFilters}
       />
       <FilterSearch
         title={"Brand"}
         options={brands}
         placeholder={"Search for a brand"}
         currFilters={currFilters}
-        setCurrFilters={setCurrFilters}
+        setCurrFilters={setSelectedFilters}
         optionCleaner={capitalizeBrand}
       />
       <FilterRating
         title={"Rating"}
         currFilters={currFilters}
-        setCurrFilters={setCurrFilters}
+        setCurrFilters={setSelectedFilters}
       />
       <FilterSearch
         title={"Country of Origin"}
         options={countries}
         placeholder={"Search for a country"}
         currFilters={currFilters}
-        setCurrFilters={setCurrFilters}
+        setCurrFilters={setSelectedFilters}
+        optionCleaner={cleanCountryName}
       />
-      <FilterSelect
+      <FilterRange
         title={"Popularity"}
-        options={[
-          "Very Rare",
-          "Rare",
-          "Common",
-          "Popular",
-          "Extremely Popular",
-        ]}
+        options={["Obscure", "Uncommon", "Moderate", "Well-Known", "Common"]}
         currFilters={currFilters}
-        setCurrFilters={setCurrFilters}
+        setCurrFilters={setSelectedFilters}
       />
       <FilterSearch
         title={"Exclude Notes/Accords"}
         options={descriptors}
         placeholder={"Search for a note/accord"}
         currFilters={currFilters}
-        setCurrFilters={setCurrFilters}
+        setCurrFilters={setSelectedFilters}
       />
       <button
         className="
@@ -93,7 +104,7 @@ export default function Filters({
           if (
             JSON.stringify(currFilters) != JSON.stringify(currQuery.filters)
           ) {
-            setQuery({ ...currQuery, filters: currFilters });
+            updateQuery({ ...currQuery, filters: currFilters });
           } else {
             console.log("Filters unchanged — no query update needed");
           }

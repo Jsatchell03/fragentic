@@ -1,8 +1,9 @@
 import React from "react";
 
-export default function Tag({ name, removeTag, optionCleaner = null }) {
+export default function ButtonTag({ name, action, optionCleaner = null }) {
   return (
     <span
+      onClick={action}
       className="
       inline-flex
       items-center
@@ -10,7 +11,7 @@ export default function Tag({ name, removeTag, optionCleaner = null }) {
       text-sm
       font-medium
       text-purple-700
-      bg-purple-100
+      bg-gray-100
       rounded-full
       hover:bg-purple-200
       mr-2 mt-2
@@ -23,16 +24,6 @@ export default function Tag({ name, removeTag, optionCleaner = null }) {
       <span className="truncate">
         {optionCleaner ? optionCleaner(name) : name}
       </span>
-      <button
-        onClick={() => removeTag(name)}
-        className="
-          ml-2 
-          text-purple-500 hover:text-purple-700 
-          focus:outline-none
-        "
-      >
-        x
-      </button>
     </span>
   );
 }

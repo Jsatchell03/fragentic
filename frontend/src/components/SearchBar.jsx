@@ -47,11 +47,20 @@ export default function SearchBar({
     if (val.length > 0) {
       const newFilteredOptions = options
         .filter((option) => !selectedOptions.includes(option.toLowerCase()))
-        .map((option) => ({
-          option,
-          dist: distance(option.toLowerCase(), val), // compute similarity
-        }))
-        .sort((a, b) => a.dist - b.dist) // smaller distance = closer match
+        .map((option) => {
+          const lower = option.toLowerCase();
+          return {
+            option,
+            startsWith: lower.startsWith(val) ? 1 : 0,
+            dist: distance(lower, val),
+          };
+        })
+        .sort((a, b) => {
+          // Sort by whether it starts with input (descending),
+          // then by distance (ascending)
+          if (b.startsWith !== a.startsWith) return b.startsWith - a.startsWith;
+          return a.dist - b.dist;
+        })
         .map((item) => item.option);
 
       setFilteredOptions(newFilteredOptions.slice(0, 5));
@@ -62,6 +71,7 @@ export default function SearchBar({
           .slice(0, 5)
       );
     }
+
     setIsOpen(true);
   };
 
@@ -72,7 +82,7 @@ export default function SearchBar({
   };
 
   return (
-    <div ref={wrapperRef} className="relative w-full flex">
+    <div ref={wrapperRef} className="relative w-full flex mt-2">
       <div
         className="
           relative w-full
