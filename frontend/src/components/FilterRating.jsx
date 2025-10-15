@@ -4,7 +4,7 @@ import React from "react";
 export default function FilterRating({ title, currFilters, setCurrFilters }) {
   const maxStars = 4;
   const [rating, setRating] = useState(currFilters[title] || 1);
-  const [hover, setHover] = useState(0); // for hover effect
+  const [hover, setHover] = useState(0);
 
   const handleClick = (value) => {
     setRating(value);

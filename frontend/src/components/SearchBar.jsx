@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { distance } from "fastest-levenshtein";
 
 export default function SearchBar({
   selectedOptions,
@@ -40,14 +41,19 @@ export default function SearchBar({
   }, []);
 
   const handleChange = (e) => {
-    const val = e.target.value;
+    const val = e.target.value.toLowerCase();
     setSearchTerm(val);
+
     if (val.length > 0) {
-      const newFilteredOptions = options.filter(
-        (option) =>
-          option.toLowerCase().includes(val.toLowerCase()) &&
-          !selectedOptions.includes(option.toLowerCase())
-      );
+      const newFilteredOptions = options
+        .filter((option) => !selectedOptions.includes(option.toLowerCase()))
+        .map((option) => ({
+          option,
+          dist: distance(option.toLowerCase(), val), // compute similarity
+        }))
+        .sort((a, b) => a.dist - b.dist) // smaller distance = closer match
+        .map((item) => item.option);
+
       setFilteredOptions(newFilteredOptions.slice(0, 5));
     } else {
       setFilteredOptions(

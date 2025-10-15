@@ -5,7 +5,10 @@ export default function Header() {
   return (
     <header className="bg-footer text-white py-2">
       <div className="w-full px-8 flex items-center justify-between">
-        <h1 className="text-3xl">Fragentic</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl pr-5">Fragentic</h1>
+          <p>AI powered fragrance search</p>
+        </div>
         <div>
           <a
             href="#contact" // link to contact section or page

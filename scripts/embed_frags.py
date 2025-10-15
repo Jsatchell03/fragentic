@@ -8,19 +8,29 @@ import re
 import ast
 from dotenv import load_dotenv
 from pymongo import MongoClient, UpdateOne
+from tqdm import tqdm
+
 from LRU_cache import LRUCache
+
 
 dotenv_path = os.path.join("..", ".env")
 load_dotenv(dotenv_path)
 
 df = pd.read_csv("../data/fra_cleaned.csv", encoding="Windows-1252", sep=";")
 df_sorted = df.sort_values(by="Rating Count", ascending=False)
-df = df_sorted[:10000]
+df = df_sorted
 
 unclean_df = pd.read_csv("../data/fra_perfumes.csv", encoding="utf-8", sep=",")
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 mongodb_client = MongoClient(os.getenv("MONGODB_CONNECTION_STRING"))
+
+EMBED_DIM = len(
+    openai_client.embeddings.create(model="text-embedding-3-small", input=["test"])
+    .data[0]
+    .embedding
+)
+
 
 fragrance_db = mongodb_client["fragrance_db"]
 fragrances_collection = fragrance_db["fragrances"]
@@ -32,8 +42,7 @@ countries_collection = fragrance_db["countries"]
 pretentiousDescriptors = {
     "wild lavender": "lavender",
     "citruses": "citrus",
-    "woodsy notes": "woody",
-    "precious woods": "woody",
+    "woodsy notes": "wood",
     "sweet notes": "sweet",
     "green accord": "green",
     "cedar essence": "cedar",
@@ -41,6 +50,41 @@ pretentiousDescriptors = {
     "california orange": "orange",
     "oriental notes": "oriental notes",
     "mastic or lentisque": "mastic",
+    "mandarin": "mandarin orange",
+    "calabrian mandarin": "italian mandarin",
+    "sicilian mandarin": "italian mandarin",
+    "lily-of-the-valley": "lily of the valley",
+    "american apple": "apple",
+    "citrus leaf": "citrus leaves",
+    "citruses water": "citrus water",
+    "citruses with sugar": "sweet citrus",
+    "sicilian citruses": "sicilian citrus",
+    "cornflower or sultan seeds": "cornflower/sweet sultan seeds",
+    "arbutus (madrona, bearberry tree)": "arbutus (madrone/bearberry tree)",
+    "agathosma betulina": "agathosma betulina (buchu)",
+    "cubeb or tailed pepper": "tailed pepper (cubeb)",
+    "christmas tree or flame tree": "flame tree",
+    "melilot or sweet clover": "sweet clover (meliot)",
+    "woodruff or galium odoratum": "sweet woodruff (galium odoratum)",
+    "hamanasu or japanese rose": "japanese rose (hamanasu)",
+    "portulaca or pigweed": "portulaca (pigweed)",
+    "silk vine or milk broom": "periploca (milk broom/silk vine)",
+    "pepperwood or hercules club": "hercules club (pepperwood)",
+    "zanthoxylum clava-herculis": "hercules club (pepperwood)",
+    "cypriol oil or nagarmotha": "cypriol oil (nagarmotha)",
+    "chimonanthus or wintersweet": "chimonanthus (wintersweet)",
+    "black hemlock or tsuga": "black hemlock (tsuga mertensiana)",
+    "princess tree or paulownia": "princess tree (paulownia tomentosa)",
+    "dark woodsy": "dark wood",
+    "pepperwood™": "pepperwood",
+    "white woods": "white wood",
+    "oriental woodsy": "oriental woods",
+    "woody": "wood",
+    "coton candy": "cotton candy",
+    "pine": "pine tree",
+    "virginian cedar": "virginia cedar",
+    "apple tree blossom": "apple blossom",
+    "vanila": "vanilla",
 }
 
 
@@ -55,10 +99,10 @@ def parseDescriptor(descriptor):
 
 
 # Indexes
-fragrances_collection.create_index({"brand": 1})
-fragrances_collection.create_index({"country": 1})
-fragrances_collection.create_index({"ratingCount": 1})
-fragrances_collection.create_index("url", unique=True)
+fragrances_collection.create_index([("brand", 1)])
+fragrances_collection.create_index([("country", 1)])
+fragrances_collection.create_index([("ratingCount", 1)])
+fragrances_collection.create_index([("url", 1)], unique=True)
 
 w_top, w_mid, w_base = 0.25, 0.30, 0.45
 w_notes, w_accords = 0.4, 0.6
@@ -110,14 +154,16 @@ def clean_note(text: str) -> str:
 def safe_list(val):
     if pd.isna(val) or not isinstance(val, str):
         return []
-    return [clean_note(x) for x in val.split(",") if x.strip()]
+    # split only on commas that are not inside parentheses
+    parts = re.split(r",\s*(?![^()]*\))", val)
+    return [clean_note(x) for x in parts if x.strip()]
 
 
 def safe_accords(url):
     try:
         row = unclean_df.loc[unclean_df["url"].str.lower() == url, "Main Accords"]
         if not row.empty:
-            return ast.literal_eval(str(row.iloc[0]).lower())
+            return [x.lower() for x in ast.literal_eval(str(row.iloc[0]))]
     except Exception:
         pass
     return []
@@ -126,12 +172,24 @@ def safe_accords(url):
 def embed_list_cached(texts: list, note=True):
     vectors = []
     missing_texts = []
+    collection = notes_collection if note else accords_collection
     for t in texts:
         v = (note_cache if note else accord_cache).get(t)
         if v is not None:
-            vectors.append(v)
+            vectors.append(np.array(v["embedding"]))
         else:
-            missing_texts.append(t)
+            doc = collection.find_one({"name": t}, {"_id": 1, "embedding": 1})
+            if doc:
+                (note_cache if note else accord_cache).put(
+                    t,
+                    {
+                        "_id": doc["_id"],
+                        "name": t,
+                        "embedding": np.array(doc["embedding"]),
+                    },
+                )
+            else:
+                missing_texts.append(t)
 
     if missing_texts:
         response = openai_client.embeddings.create(
@@ -139,15 +197,52 @@ def embed_list_cached(texts: list, note=True):
         )
         embeddings = [np.array(x.embedding) for x in response.data]
         for t, e in zip(missing_texts, embeddings):
-            (note_cache if note else accord_cache).put(t, e)
+            result = collection.insert_one({"name": t, "embedding": e.tolist()})
+            (note_cache if note else accord_cache).put(
+                t, {"_id": result.inserted_id, "name": t, "embedding": e}
+            )
         vectors.extend(embeddings)
 
     return vectors
 
 
+def embed_text(text, note=True):
+    v = (note_cache if note else accord_cache).get(text)
+    if v is not None:
+        return v["embedding"]
+    else:
+        response = openai_client.embeddings.create(
+            model="text-embedding-3-small", input=text
+        )
+        embedding = np.array(response.data[0].embedding)
+        return embedding
+
+
+def get_descriptor_id(name: str, note=True):
+    if not name:
+        return None
+    collection = notes_collection if note else accords_collection
+    v = (note_cache if note else accord_cache).get(name)
+    if v is not None:
+        return v["_id"]
+    doc = collection.find_one({"name": name}, {"_id": 1, "embedding": 1})
+    if doc:
+        (note_cache if note else accord_cache).put(
+            name,
+            {"_id": doc["_id"], "name": name, "embedding": np.array(doc["embedding"])},
+        )
+        return doc["_id"]
+    embedding = embed_text(name, note=note)
+    result = collection.insert_one({"name": name, "embedding": embedding.tolist()})
+    (note_cache if note else accord_cache).put(
+        name, {"_id": result.inserted_id, "name": name, "embedding": embedding}
+    )
+    return result.inserted_id
+
+
 def accord_vector(accords):
     if not accords:
-        return np.zeros(1536)
+        return np.zeros(EMBED_DIM)
     weights = np.linspace(len(accords), 1, num=len(accords))
     weights /= weights.sum()
     vecs = np.array(embed_list_cached(accords, note=False))
@@ -156,7 +251,7 @@ def accord_vector(accords):
 
 def average_embeddings(vectors, weight=1.0):
     if not vectors:
-        return np.zeros(1536)
+        return np.zeros(EMBED_DIM)
     return weight * np.mean(vectors, axis=0)
 
 
@@ -164,10 +259,13 @@ def average_embeddings(vectors, weight=1.0):
 print("Started Embedding")
 start_time = time.time()
 
-for _, row in df.iterrows():
+for _, row in tqdm(df.iterrows(), total=len(df), desc="Processing fragrances"):
+    url = safe_str(row.get("url"))
+    if fragrances_collection.find_one({"url": url}):
+        continue
     res = {}
     res["name"] = safe_str(row.get("Perfume"))
-    res["url"] = safe_str(row.get("url"))
+    res["url"] = url
     res["rating"] = safe_float(row.get("Rating Value"))
     res["ratingCount"] = safe_int(row.get("Rating Count"))
     res["year"] = safe_int(row.get("Year"))
@@ -175,19 +273,28 @@ for _, row in df.iterrows():
     res["gender"] = safe_str(row.get("Gender"))
     res["country"] = safe_str(row.get("Country"))
 
-    res["topNotes"] = [parseDescriptor(x) for x in safe_list(row.get("Top"))]
-    res["midNotes"] = [parseDescriptor(x) for x in safe_list(row.get("Middle"))]
-    res["baseNotes"] = [parseDescriptor(x) for x in safe_list(row.get("Base"))]
-    res["accords"] = [parseDescriptor(x) for x in safe_accords(res["url"])]
+    res["topNotes"] = [
+        get_descriptor_id(parseDescriptor(x)) for x in safe_list(row.get("Top"))
+    ]
+    res["midNotes"] = [
+        get_descriptor_id(parseDescriptor(x)) for x in safe_list(row.get("Middle"))
+    ]
+    res["baseNotes"] = [
+        get_descriptor_id(parseDescriptor(x)) for x in safe_list(row.get("Base"))
+    ]
+    res["accords"] = [
+        get_descriptor_id(parseDescriptor(x), note=False)
+        for x in safe_accords(res["url"])
+    ]
 
     res["topNotesVector"] = average_embeddings(
-        embed_list_cached(res["topNotes"])
+        embed_list_cached([parseDescriptor(x) for x in safe_list(row.get("Top"))])
     ).tolist()
     res["midNotesVector"] = average_embeddings(
-        embed_list_cached(res["midNotes"])
+        embed_list_cached([parseDescriptor(x) for x in safe_list(row.get("Middle"))])
     ).tolist()
     res["baseNotesVector"] = average_embeddings(
-        embed_list_cached(res["baseNotes"])
+        embed_list_cached([parseDescriptor(x) for x in safe_list(row.get("Base"))])
     ).tolist()
 
     res["totalNotesVector"] = (
@@ -196,7 +303,9 @@ for _, row in df.iterrows():
         + w_base * np.array(res["baseNotesVector"])
     ).tolist()
 
-    res["accordVector"] = accord_vector(res["accords"]).tolist()
+    res["accordVector"] = accord_vector(
+        [parseDescriptor(x) for x in safe_accords(res["url"])]
+    ).tolist()
     res["fragranceVector"] = (
         w_notes * np.array(res["totalNotesVector"])
         + w_accords * np.array(res["accordVector"])
@@ -205,23 +314,16 @@ for _, row in df.iterrows():
     # Update sets
     all_countries.add(res["country"])
     all_brands.add(res["brand"])
-    all_notes.update(res["topNotes"])
-    all_notes.update(res["midNotes"])
-    all_notes.update(res["baseNotes"])
-    all_accords.update(res["accords"])
 
     # Upsert fragrance
     fragrances_collection.update_one(
         {"url": res["url"]}, {"$setOnInsert": res}, upsert=True
     )
-    print(f"{res["name"]} added")
 
 # --- Bulk write for metadata ---
 for collection, items in [
     (brands_collection, all_brands),
     (countries_collection, all_countries),
-    (notes_collection, all_notes),
-    (accords_collection, all_accords),
 ]:
     ops = [
         UpdateOne({"name": x}, {"$setOnInsert": {"name": x}}, upsert=True)
@@ -230,7 +332,7 @@ for collection, items in [
     collection.bulk_write(ops, ordered=False)
 
 end_time = time.time()
-print(f"Embedding took {end_time - start_time:.2f} seconds")
+print(f"✅ Processed {len(df)} fragrances in {end_time - start_time:.2f} seconds")
 
 
 with open("../data/note_cache.json", "w") as f:

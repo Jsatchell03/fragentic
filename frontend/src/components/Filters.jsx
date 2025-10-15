@@ -58,6 +58,18 @@ export default function Filters({
         currFilters={currFilters}
         setCurrFilters={setCurrFilters}
       />
+      <FilterSelect
+        title={"Popularity"}
+        options={[
+          "Very Rare",
+          "Rare",
+          "Common",
+          "Popular",
+          "Extremely Popular",
+        ]}
+        currFilters={currFilters}
+        setCurrFilters={setCurrFilters}
+      />
       <FilterSearch
         title={"Exclude Notes/Accords"}
         options={descriptors}
