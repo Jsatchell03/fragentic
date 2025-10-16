@@ -33,11 +33,11 @@ export default function Filters({
   function cleanCountryName(name) {
     return name.toUpperCase();
   }
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <aside
-      className="
+    <>
+      <div
+        className="
         w-64
         bg-white
         rounded-xl
@@ -46,50 +46,50 @@ export default function Filters({
         mx-4
         space-y-6
       "
-    >
-      <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
-      <FilterSelect
-        title={"Gender"}
-        options={["For Men", "For Women", "Unisex"]}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
-      />
-      <FilterSearch
-        title={"Brand"}
-        options={brands}
-        placeholder={"Search for a brand"}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
-        optionCleaner={capitalizeBrand}
-      />
-      <FilterRating
-        title={"Rating"}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
-      />
-      <FilterSearch
-        title={"Country of Origin"}
-        options={countries}
-        placeholder={"Search for a country"}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
-        optionCleaner={cleanCountryName}
-      />
-      <FilterRange
-        title={"Popularity"}
-        options={["Obscure", "Uncommon", "Moderate", "Well-Known", "Common"]}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
-      />
-      <FilterSearch
-        title={"Exclude Notes/Accords"}
-        options={descriptors}
-        placeholder={"Search for a note/accord"}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
-      />
-      <button
-        className="
+      >
+        <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
+        <FilterSelect
+          title={"Gender"}
+          options={["For Men", "For Women", "Unisex"]}
+          currFilters={currFilters}
+          setCurrFilters={setSelectedFilters}
+        />
+        <FilterSearch
+          title={"Brand"}
+          options={brands}
+          placeholder={"Search for a brand"}
+          currFilters={currFilters}
+          setCurrFilters={setSelectedFilters}
+          optionCleaner={capitalizeBrand}
+        />
+        <FilterRating
+          title={"Rating"}
+          currFilters={currFilters}
+          setCurrFilters={setSelectedFilters}
+        />
+        <FilterSearch
+          title={"Country of Origin"}
+          options={countries}
+          placeholder={"Search for a country"}
+          currFilters={currFilters}
+          setCurrFilters={setSelectedFilters}
+          optionCleaner={cleanCountryName}
+        />
+        <FilterRange
+          title={"Popularity"}
+          options={["Obscure", "Uncommon", "Moderate", "Well-Known", "Common"]}
+          currFilters={currFilters}
+          setCurrFilters={setSelectedFilters}
+        />
+        <FilterSearch
+          title={"Exclude Notes/Accords"}
+          options={descriptors}
+          placeholder={"Search for a note/accord"}
+          currFilters={currFilters}
+          setCurrFilters={setSelectedFilters}
+        />
+        <button
+          className="
           w-full
           bg-purple-600
           hover:bg-purple-700
@@ -100,18 +100,13 @@ export default function Filters({
           shadow-sm
           focus:outline-none
         "
-        onClick={() => {
-          if (
-            JSON.stringify(currFilters) != JSON.stringify(currQuery.filters)
-          ) {
+          onClick={() => {
             updateQuery({ ...currQuery, filters: currFilters });
-          } else {
-            console.log("Filters unchanged — no query update needed");
-          }
-        }}
-      >
-        Apply Filters
-      </button>
-    </aside>
+          }}
+        >
+          Apply Filters
+        </button>
+      </div>
+    </>
   );
 }

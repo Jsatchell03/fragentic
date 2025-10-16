@@ -8,6 +8,7 @@ export default function SearchBar({
   optionCleaner = null,
   options,
   placeholder,
+  name,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredOptions, setFilteredOptions] = useState(
@@ -56,8 +57,6 @@ export default function SearchBar({
           };
         })
         .sort((a, b) => {
-          // Sort by whether it starts with input (descending),
-          // then by distance (ascending)
           if (b.startsWith !== a.startsWith) return b.startsWith - a.startsWith;
           return a.dist - b.dist;
         })

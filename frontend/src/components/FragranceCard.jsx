@@ -1,7 +1,7 @@
 import React from "react";
 
 export default function FragranceCard({ fragrance }) {
-  const { name, brand, rating, descriptors, url, gender } = fragrance;
+  const { name, brand, rating, descriptors, url, gender, score } = fragrance;
 
   // Show only the first 3 descriptors
   const displayedDescriptors = descriptors.slice(0, 15);
@@ -33,14 +33,19 @@ export default function FragranceCard({ fragrance }) {
     <div className="flex flex-col w-full justify-between bg-white h-96 shadow-md rounded-xl p-4 w-72 hover:shadow-xl transition-shadow duration-300 mb-2 mr-2">
       <div>
         {/* Name */}
-        <div className="text-xl font-bold text-gray-800 mb-1">
-          {capitalizeName(name)}
+        <div className="mb-1 flex flex-row justify-between">
+          <div className="text-xl font-bold text-gray-800">
+            {capitalizeName(name)}
+          </div>
+          <div className="text-xs text-gray-500">
+            {Math.trunc(score * 100) + "% match"}
+          </div>
         </div>
 
         {/* Brand */}
         <div className="flex flex-row justify-between mb-4">
-          <div className="text-gray-500 ">By {capitalizeBrand(brand)}</div>
-          <div className="text-gray-500 ">{capitalizeGender(gender)}</div>
+          <div className="text-gray-500">By {capitalizeBrand(brand)}</div>
+          {/* <div className="text-gray-500 ">{capitalizeGender(gender)}</div> */}
         </div>
         {/* Descriptors */}
         <div className="flex flex-wrap gap-2">

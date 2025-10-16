@@ -179,7 +179,7 @@ def search():
         del frag["accords"]
 
     results_list.sort(key=lambda x: x["score"], reverse=True)
-
+    print([x["name"] for x in results_list])
     return jsonify({"results": results_list})
 
 

@@ -12,7 +12,7 @@ export default function Header() {
         <div>
           <a
             href="#contact" // link to contact section or page
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
+            className="hidden sm:block bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
           >
             Contact Us
           </a>

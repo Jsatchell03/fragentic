@@ -77,14 +77,7 @@ export default function DescriptorSearch({
   };
 
   const search = () => {
-    if (
-      JSON.stringify(selectedDescriptors) !=
-      JSON.stringify(currQuery.descriptors)
-    ) {
-      updateQuery({ ...currQuery, descriptors: selectedDescriptors });
-    } else {
-      console.log("Descriptors unchanged — no query update needed");
-    }
+    updateQuery({ ...currQuery, descriptors: selectedDescriptors });
   };
 
   return (
@@ -105,6 +98,7 @@ export default function DescriptorSearch({
         Descibe the notes and accords of your fragrance and Fragentic will find
         the top matches
       </p>
+
       {currDescriptors.length > 0 &&
         currDescriptors.map((descriptor, index) => (
           <Tag name={descriptor} key={index} removeTag={removeDescriptor} />
@@ -114,6 +108,7 @@ export default function DescriptorSearch({
         updateSelectedOptions={updateCurrDescriptors}
         triggerSearch={search}
         options={descriptors}
+        name={"descriptor-search"}
       />
       <div className="mt-2">
         <p className="mb-2">Most common notes and accords</p>
