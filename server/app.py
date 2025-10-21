@@ -35,8 +35,6 @@ def search():
     if len(data["descriptors"]) == 0:
         return jsonify({"error": "Empty query received"}), 400
 
-    print(data)
-
     def embed_list(texts: list):
         ai_response = [
             x.embedding
@@ -121,7 +119,6 @@ def search():
             )
 
         obj = {"$or": filter}
-        print(obj)
         mongo_filters.append(obj)
 
     results = frag_db["fragrances"].aggregate(
@@ -179,7 +176,6 @@ def search():
         del frag["accords"]
 
     results_list.sort(key=lambda x: x["score"], reverse=True)
-    print([x["name"] for x in results_list])
     return jsonify({"results": results_list})
 
 
@@ -192,7 +188,6 @@ def get_accords():
 @app.route("/api/v1/brands", methods=["GET"])
 def get_brands():
     data = list(frag_db["brands"].find({}))
-    print(data)
     return jsonify(data)
 
 

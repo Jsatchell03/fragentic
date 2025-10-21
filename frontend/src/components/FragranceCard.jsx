@@ -3,19 +3,19 @@ import React from "react";
 export default function FragranceCard({ fragrance }) {
   const { name, brand, rating, descriptors, url, gender, score } = fragrance;
 
-  // Show only the first 3 descriptors
   const displayedDescriptors = descriptors.slice(0, 15);
+
   function capitalizeBrand(name) {
     return name
-      .split("-") // split into words
-      .map((word) => word[0].toUpperCase() + word.slice(1)) // capitalize first letter
+      .split("-")
+      .map((word) => word[0].toUpperCase() + word.slice(1))
       .join(" ");
   }
 
   function capitalizeGender(gender) {
     const firstLetter = gender.charAt(0).toUpperCase();
     const restOfString = gender.slice(1);
-    if (gender != "unisex") {
+    if (gender !== "unisex") {
       return "For " + firstLetter + restOfString;
     } else {
       return firstLetter + restOfString;
@@ -24,20 +24,20 @@ export default function FragranceCard({ fragrance }) {
 
   function capitalizeName(name) {
     return name
-      .split("-") // split into words
-      .map((word) => word[0].toUpperCase() + word.slice(1)) // capitalize first letter
+      .split("-")
+      .map((word) => word[0].toUpperCase() + word.slice(1))
       .join(" ");
   }
 
   return (
-    <div className="flex flex-col w-full justify-between bg-white h-96 shadow-md rounded-xl p-4 w-72 hover:shadow-xl transition-shadow duration-300 mb-2 mr-2">
+    <div className="flex flex-col justify-between bg-white shadow-md rounded-xl p-4 hover:shadow-xl transition-shadow duration-300 h-full">
       <div>
         {/* Name */}
-        <div className="mb-1 flex flex-row justify-between">
-          <div className="text-xl font-bold text-gray-800">
+        <div className="mb-1 flex flex-row justify-between items-start gap-2">
+          <div className="text-xl font-bold text-gray-800 flex-1">
             {capitalizeName(name)}
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-500 whitespace-nowrap">
             {Math.trunc(score * 100) + "% match"}
           </div>
         </div>
@@ -45,8 +45,9 @@ export default function FragranceCard({ fragrance }) {
         {/* Brand */}
         <div className="flex flex-row justify-between mb-4">
           <div className="text-gray-500">By {capitalizeBrand(brand)}</div>
-          {/* <div className="text-gray-500 ">{capitalizeGender(gender)}</div> */}
+          <div className="text-gray-500 ">{capitalizeGender(gender)}</div>
         </div>
+
         {/* Descriptors */}
         <div className="flex flex-wrap gap-2">
           {displayedDescriptors.map((desc, idx) => (
@@ -59,12 +60,15 @@ export default function FragranceCard({ fragrance }) {
           ))}
         </div>
       </div>
-      <div className="mt-4 flex align-items justify-between">
+
+      {/* Footer section */}
+      <div className="mt-4 flex items-center justify-between">
         <div>
           <a
             href={url}
             target="_blank"
-            className="flex items-center gap-1 text-gray-800"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-gray-800 hover:text-purple-600 transition-colors"
           >
             <span className="text-gray-500">More Info</span>
             <svg
@@ -80,8 +84,7 @@ export default function FragranceCard({ fragrance }) {
         </div>
 
         {/* Rating with single star */}
-        <div className="flex items-center justify-end mb-3">
-          {/* SVG star */}
+        <div className="flex items-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-5 w-5 text-yellow-400"

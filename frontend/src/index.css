@@ -6,7 +6,7 @@
     --breakpoint-md: 1000px;
     --breakpoint-lg: 1250px;
     --breakpoint-xl: 1500px;
-    --breakpoint-short: (max-height: 800px)
+    --breakpoint-fat:  750px;
   }
 
 html, body, #root {
