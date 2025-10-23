@@ -12,6 +12,10 @@ from bson import ObjectId
 
 
 load_dotenv()
+os.environ.pop("HTTP_PROXY", None)
+os.environ.pop("HTTPS_PROXY", None)
+os.environ.pop("ALL_PROXY", None)
+
 mongodb_client = MongoClient(os.getenv("MONGODB_CONNECTION_STRING"))
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -46,32 +50,10 @@ def search():
     def average_embeddings(vectors, weight=1.0):
         return weight * np.mean(vectors, axis=0)
 
-    # def coverage(user_input_vectors, descriptor_ids, collection):
-    #     if not descriptor_ids or not user_input_vectors:
-    #         return 0.0
-
-    #     descriptor_docs = list(
-    #         collection.find({"_id": {"$in": descriptor_ids}}, {"embedding": 1})
-    #     )
-
-    #     if not descriptor_docs:
-    #         return 0.0
-
-    #     embeddings = np.array([doc["embedding"] for doc in descriptor_docs])
-
-    #     user_vecs = np.array(user_input_vectors)
-
-    #     similarity_matrix = 1 - cdist(user_vecs, embeddings, metric="cosine")
-
-    #     full_mask = similarity_matrix >= full_match
-    #     half_mask = (similarity_matrix >= half_match) & ~full_mask
-    #     low_mask = similarity_matrix < neg_match
-    #     penalties = np.zeros_like(similarity_matrix)
-    #     penalties[low_mask] = neg_match - similarity_matrix[low_mask]
-
-    #     matches = full_mask.sum() + 0.5 * half_mask.sum() - penalties.sum()
-
-    #     return matches / ((len(descriptor_ids) * len(user_input_vectors)))
+    def coverage(
+        user_input_vectors,
+    ):
+        pass
 
     input_descriptors_embedding = embed_list(data["descriptors"])
     input_embedding = average_embeddings(input_descriptors_embedding).tolist()
