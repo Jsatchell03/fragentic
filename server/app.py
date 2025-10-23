@@ -11,8 +11,7 @@ from scipy.spatial.distance import cosine, cdist
 from bson import ObjectId
 
 
-dotenv_path = os.path.join("..", ".env")
-load_dotenv(dotenv_path)
+load_dotenv()
 mongodb_client = MongoClient(os.getenv("MONGODB_CONNECTION_STRING"))
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
