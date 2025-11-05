@@ -1,5 +1,5 @@
 # Fragentic: AI-Powered Fragrance Recommendation Engine
-
+# Live At : [fragentic.vercel.app](https://fragentic.vercel.app/)
 ## 📋 Overview
 
 Fragentic is a full-stack AI-powered recommendation system that helps users discover fragrances tailored to their preferences. Using OpenAI's embeddings and MongoDB vector search, the platform analyzes natural language descriptions of fragrance notes and returns the most relevant fragrances from a curated dataset of 23,000+ products.
