@@ -13,6 +13,8 @@ function UserInput() {
   const [descriptors, setDescriptors] = useState([]);
   const [results, setResults] = useState([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [backendAwake, setBackendAwake] = useState(false);
+  const [loadingResults, setLoadingResults] = useState(false);
   const [query, setQuery] = useState({
     descriptors: [],
     filters: {
@@ -56,34 +58,94 @@ function UserInput() {
     }
   };
 
-  useEffect(() => {
-    fetch(`${API_URL}/filters`)
-      .then((res) => res.json())
+  const fetchFilters = () => {
+    fetch("filters.json", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    })
+      .then((response) => {
+        console.log(response);
+        return response.json();
+      })
       .then((data) => {
+        console.log(data);
         setAllNotes(data.notes);
         setAllAccords(data.accords);
         setAllCountries(data.countries);
         setAllBrands(data.brands);
         setDescriptors(data.descriptors);
       });
+  };
+
+  const pollBackend = async () => {
+    if (!backendAwake) {
+      try {
+        const res = await fetch(`${API_URL}/wakeup`);
+        if (res.ok) {
+          setBackendAwake(true);
+          const data = await res.json();
+          console.log(data);
+        }
+      } catch (error) {
+        window.alert(
+          "Spinning Up Backend. Search results may take up to a minute."
+        );
+        console.error(error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    pollBackend();
+    fetchFilters();
   }, []);
 
   const didMount = useRef(false);
 
+  const fetchResults = async () => {
+    let attempts = 0;
+    const maxAttempts = 20;
+    const delayMs = 5000;
+
+    while (attempts < maxAttempts) {
+      try {
+        const res = await fetch(`${API_URL}/search`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(query),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          console.log(data);
+          setLoadingResults(false);
+          setResults(data.results);
+          return;
+        }
+        throw new Error(`HTTP error! status: ${res.status}`);
+      } catch (error) {
+        console.log(`Attempt ${attempts + 1} failed:`, error);
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+        } else {
+          setLoadingResults(false);
+          console.error("Backend failed to respond after maximum attempts");
+        }
+      }
+    }
+  };
   useEffect(() => {
     if (!didMount.current) {
       didMount.current = true;
       return;
     }
     if (query["descriptors"].length > 0) {
-      fetch(`${API_URL}/search`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(query),
-      })
-        .then((res) => res.json())
-        .then((data) => setResults(data.results))
-        .catch((err) => console.error("Error:", err));
+      setLoadingResults(true);
+      fetchResults();
+    } else {
+      setLoadingResults(false);
     }
   }, [query]);
 
@@ -104,8 +166,6 @@ function UserInput() {
         selectedDescriptors={selectedDescriptors}
         setSelectedDescriptors={setSelectedDescriptors}
       />
-
-      {/* Mobile filter toggle button */}
       <div
         onClick={() => setFiltersOpen(!filtersOpen)}
         className="fat:hidden mx-4 bg-white px-4 py-4 rounded-xl mb-4 shadow-md flex items-center justify-between cursor-pointer"
@@ -130,9 +190,7 @@ function UserInput() {
         </div>
       </div>
 
-      {/* Main content area - flex-grow to fill available space */}
       <div className="flex flex-col fat:flex-row fat:items-start gap-4 px-4 pb-4 flex-grow overflow-hidden mb-4">
-        {/* Filters sidebar - show/hide on mobile based on filtersOpen */}
         <div
           ref={filtersRef}
           className={`${
@@ -152,14 +210,13 @@ function UserInput() {
           />
         </div>
 
-        {/* Results area - scrollable, matches filter height on desktop */}
         <div
           className="flex-1 w-full fat:overflow-y-auto overflow-hidden"
           style={{
             maxHeight: filtersHeight > 0 ? `${filtersHeight}px` : "none",
           }}
         >
-          <Results results={results} />
+          <Results results={results} loading={loadingResults} />
         </div>
       </div>
 

@@ -62,7 +62,11 @@ export default function SearchBar({
         })
         .map((item) => item.option);
 
-      setFilteredOptions(newFilteredOptions.slice(0, 5));
+      const optionsWithCurrent = [
+        val,
+        ...newFilteredOptions.filter((opt) => opt.toLowerCase() !== val),
+      ];
+      setFilteredOptions(optionsWithCurrent.slice(0, 5));
     } else {
       setFilteredOptions(
         options

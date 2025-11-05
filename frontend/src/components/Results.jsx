@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import FragranceCard from "./FragranceCard";
-
-export default function Results({ results }) {
+import LoadingSpinner from "./LoadingSpinner";
+export default function Results({ results, loading = true }) {
   const [sortOption, setSortOption] = useState("relevance-desc");
   const [limit, setLimit] = useState(20);
 
@@ -23,14 +23,21 @@ export default function Results({ results }) {
   });
 
   const limitedResults = sortedResults.slice(0, limit);
-
+  if (loading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center overflow-hidden">
+        <div className="w-1/2">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
   if (results.length === 0) {
     return null;
   }
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Controls - fixed at top, not scrolling */}
       <div className="flex-shrink-0 flex flex-row justify-between items-center gap-2 sm:gap-4 mb-4 bg-white p-2 sm:p-4 rounded-xl shadow-md sticky top-0 z-10">
         <div className="flex items-center space-x-1 sm:space-x-3 min-w-0">
           <label
@@ -52,7 +59,10 @@ export default function Results({ results }) {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-          <label htmlFor="sort" className="text-gray-600 text-xs sm:text-sm whitespace-nowrap">
+          <label
+            htmlFor="sort"
+            className="text-gray-600 text-xs sm:text-sm whitespace-nowrap"
+          >
             Sort:
           </label>
           <select
@@ -70,7 +80,6 @@ export default function Results({ results }) {
         </div>
       </div>
 
-      {/* Results grid - scrollable only this section */}
       <div className="flex-1 overflow-y-auto pr-2">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {limitedResults.map((fragrance, idx) => (

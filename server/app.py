@@ -9,6 +9,7 @@ import numpy as np
 from openai import OpenAI
 from scipy.spatial.distance import cosine, cdist
 from bson import ObjectId
+import time
 
 
 load_dotenv()
@@ -200,7 +201,12 @@ def get_filters():
         x["name"] for x in frag_db["accords"].find({}, {"_id": 0, "name": 1})
     ]
     data["descriptors"] = list(set(data["notes"]) | set(data["accords"]))
-    # add popularity
+    return jsonify(data)
+
+
+@app.route("/api/v1/wakeup", methods=["GET"])
+def wakeup():
+    data = {"awake": True}
     return jsonify(data)
 
 
