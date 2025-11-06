@@ -66,11 +66,9 @@ function UserInput() {
       },
     })
       .then((response) => {
-        console.log(response);
         return response.json();
       })
       .then((data) => {
-        console.log(data);
         setAllNotes(data.notes);
         setAllAccords(data.accords);
         setAllCountries(data.countries);
@@ -79,11 +77,29 @@ function UserInput() {
       });
   };
 
+  const pollBackend = async () => {
+    if (!backendAwake) {
+      try {
+        const res = await fetch(`${API_URL}/wakeup`);
+        if (res.ok) {
+          setBackendAwake(true);
+          const data = await res.json();
+          console.log(data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
   useEffect(() => {
     fetchFilters();
-    window.alert(
-      "Spinning Up Backend. Search results may take up to a minute."
-    );
+    pollBackend();
+    setTimeout(() => {
+      window.alert(
+        "Spinning Up Backend. Search results may take up to a minute."
+      );
+    }, 100);
   }, []);
 
   const didMount = useRef(false);
