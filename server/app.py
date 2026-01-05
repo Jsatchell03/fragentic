@@ -110,8 +110,8 @@ def search():
                     "index": "fragranceVectorSearch",
                     "path": "fragranceVector",
                     "queryVector": input_embedding,
-                    "numCandidates": 1000,
-                    "limit": 100,
+                    "numCandidates": 10000,
+                    "limit": 1000,
                     "filter": {"$and": mongo_filters},
                 }
             },
@@ -142,16 +142,6 @@ def search():
     results_list = list(results)
 
     for frag in results_list:
-        # frag["coverage"] = 0.5 * coverage(
-        #     input_descriptors_embedding,
-        #     (frag["topNotes"] + frag["midNotes"] + frag["baseNotes"]),
-        #     frag_db["notes"],
-        # ) + 0.5 * coverage(
-        #     input_descriptors_embedding,
-        #     frag["accords"],
-        #     frag_db["accords"],
-        # )
-        # frag["score"] = 0.2 * frag["coverage"] + 0.8 * frag["score"]
         del frag["topNotes"]
         del frag["midNotes"]
         del frag["baseNotes"]

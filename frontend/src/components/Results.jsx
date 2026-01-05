@@ -80,7 +80,7 @@ export default function Results({ results, loading = true }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2">
+      <div className="flex-1 overflow-y-auto pr-2 py-5">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {limitedResults.map((fragrance, idx) => (
             <FragranceCard key={idx} fragrance={fragrance} />
