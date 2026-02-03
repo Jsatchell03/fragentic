@@ -14,12 +14,12 @@ export default function Footer() {
 
           {/* Right section - button and copyright */}
           <div className="flex flex-col items-center gap-3">
-            <a
+            {/* <a
               href="#contact"
               className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-xl transition-colors"
             >
               Contact Us
-            </a>
+            </a> */}
             <p className="text-xs text-gray-400">
               © {new Date().getFullYear()} Fragentic
             </p>

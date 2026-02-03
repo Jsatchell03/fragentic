@@ -35,3 +35,10 @@ CLAUDE.md
 *.sln
 *.sw?
 CLAUDE.md
+
+TESTING.md
+frontend/src/components/__tests__/
+frontend/src/test/
+pytest.ini
+requirements-dev.txt
+tests/

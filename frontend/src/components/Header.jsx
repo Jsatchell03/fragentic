@@ -10,12 +10,12 @@ export default function Header() {
           <p>AI powered fragrance search</p>
         </div>
         <div>
-          <a
+          {/* <a
             href="#contact" // link to contact section or page
             className="hidden sm:block bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-xl transition-colors"
           >
             Contact Us
-          </a>
+          </a> */}
         </div>
       </div>
     </header>
