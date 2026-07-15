@@ -5,11 +5,7 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           {/* Left section - description */}
           <div className="max-w-md text-center sm:text-left">
-            <p className="text-sm leading-relaxed">
-              Questions? Feature suggestions? Let us know! We would love to make
-              this site more useful. Hit the "Contact Us" button and let us know
-              about any bugs, or features you would like to see on Fragentic.
-            </p>
+            <p className="text-sm leading-relaxed"></p>
           </div>
 
           {/* Right section - button and copyright */}
@@ -20,9 +16,7 @@ export default function Footer() {
             >
               Contact Us
             </a> */}
-            <p className="text-xs text-gray-400">
-              © {new Date().getFullYear()} Fragentic
-            </p>
+            <p className="text-xs text-gray-400"></p>
           </div>
         </div>
       </div>
