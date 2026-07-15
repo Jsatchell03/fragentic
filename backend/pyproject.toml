@@ -4,5 +4,10 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "numpy>=2.5.1",
+    "pandas>=3.0.3",
+    "pydantic-settings[yaml]>=2.14.2",
+    "tqdm>=4.68.4",
+]
 

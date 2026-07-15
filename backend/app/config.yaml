@@ -1,0 +1,10 @@
+openai:
+  model: "text-embedding-3-large"
+etl:
+  cache_max_size: 10000
+  note_weight: .4
+  accord_weight: .6
+  top_note_weight: 0.25
+  mid_note_weight: 0.30
+  base_note_weight: 0.45
+  batch_size: 2048
