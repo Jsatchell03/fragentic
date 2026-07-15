@@ -65,7 +65,7 @@ export default function DescriptorSearch({
   ].filter((n) => !currDescriptors.includes(n));
   const removeDescriptor = (descriptor) => {
     let newCurrDescriptors = [...currDescriptors].filter(
-      (n) => n !== descriptor
+      (n) => n !== descriptor,
     );
     setSelectedDescriptors(newCurrDescriptors);
   };
@@ -94,10 +94,7 @@ export default function DescriptorSearch({
         Find your fragrance
       </h2>
 
-      <p>
-        Descibe the notes and accords of your fragrance and Fragentic will find
-        the top matches
-      </p>
+      <p>Descibe your scent and Fragentic will find the top matches</p>
 
       {currDescriptors.length > 0 &&
         currDescriptors.map((descriptor, index) => (
