@@ -8,6 +8,7 @@ dependencies = [
     "numpy>=2.5.1",
     "pandas>=3.0.3",
     "pydantic-settings[yaml]>=2.14.2",
+    "redis>=8.0.1",
     "tqdm>=4.68.4",
 ]
 

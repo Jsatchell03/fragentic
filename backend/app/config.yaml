@@ -1,8 +1,9 @@
 openai:
   model: "text-embedding-3-large"
+  dimensions: 1024
 etl:
-  cache_max_size: 10000
   note_weight: .4
+  accord_decay: .90
   accord_weight: .6
   top_note_weight: 0.25
   mid_note_weight: 0.30

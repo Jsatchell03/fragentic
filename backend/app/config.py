@@ -14,13 +14,14 @@ class OpenAIConfig(BaseModel):
 
 
 class ETLConfig(BaseModel):
-    cache_max_size: int
     note_weight: float
     accord_weight: float
+    accord_decay: float
     top_note_weight: float
     mid_note_weight: float
     base_note_weight: float
     batch_size: int
+    dimensions: int
 
 
 class AppSettings(BaseSettings):
