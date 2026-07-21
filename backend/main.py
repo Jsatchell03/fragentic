@@ -4,18 +4,13 @@ app = FastAPI()
 
 
 @app.get("/")
-async def root():
+def root():
     return {"message": "Hello World"}
 
 
-# @app.post("/api/v1/search")
-# def search():
-#     pass
-
-
-# @app.get("/api/v1/constants")
-# def get_constants():
-#     pass
+@app.post("/api/v1/search")
+def search():
+    pass
 
 
 if __name__ == "__main__":

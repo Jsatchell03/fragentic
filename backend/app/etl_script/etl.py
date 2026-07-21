@@ -4,19 +4,19 @@ import time
 import re
 import ast
 from tqdm import tqdm
-from app.services.openai_service import get_embedding, get_many_embeddings
-from app.services.db_service import upload_one, dump, get_all, check_match
 from pathlib import Path
+from app.services.embedding_service import embed_list, embed, avg_embeddings
+from app.config import settings
 
 BASE_DIR = Path(__file__).resolve().parent
-
+ACCORD_DECAY = settings.etl.accord_decay
+EMBED_DIM = settings.openai.dimension
 df = pd.read_csv(f"{BASE_DIR}/data/fra_cleaned.csv", encoding="Windows-1252", sep=";")
 df_sorted = df.sort_values(by="Rating Count", ascending=False)
 df = df_sorted
 
 unclean_df = pd.read_csv(f"{BASE_DIR}/data/fra_perfumes.csv", encoding="utf-8", sep=",")
 
-EMBED_DIM = len(get_embedding("test"))
 
 descriptor_map = {
     "wild lavender": "lavender",
@@ -69,12 +69,6 @@ descriptor_map = {
 
 w_top, w_mid, w_base = 0.25, 0.30, 0.45
 w_notes, w_accords = 0.4, 0.6
-
-# Existing sets
-all_brands = set([brand["name"] for brand in get_all("brands")])
-all_countries = set([country["name"] for country in get_all("countries")])
-all_notes = set([note["name"] for note in get_all("notes")])
-all_accords = set([accord["name"] for accord in get_all("accords")])
 
 
 # --- Helper functions ---
@@ -133,17 +127,12 @@ def parse_descriptor(descriptor):
 def accord_vector(accords):
     if not accords:
         return np.zeros(EMBED_DIM)
-    weights = np.linspace(len(accords), 1, num=len(accords))
+
+    weights = ACCORD_DECAY ** np.arange(len(accords))
     weights /= weights.sum()
-    vecs = np.array(get_many_embeddings(accords))
+
+    vecs = np.array(embed_list(accords))
     return np.sum(vecs * weights[:, np.newaxis], axis=0)
-
-
-def average_embeddings(vectors, weight=1.0):
-    vectors = np.asarray(vectors)
-    if vectors.size == 0:
-        return np.zeros(EMBED_DIM)
-    return weight * np.mean(vectors, axis=0)
 
 
 # --- Main embedding loop ---
@@ -176,9 +165,9 @@ for _, row in tqdm(df.iterrows(), total=len(df), desc="Processing fragrances"):
         parse_descriptor(accord) for accord in safe_accords(fragrance["url"])
     ]
 
-    top_vec = average_embeddings(get_many_embeddings(fragrance["top_notes"]), w_top)
-    mid_vec = average_embeddings(get_many_embeddings(fragrance["mid_notes"]), w_mid)
-    base_vec = average_embeddings(get_many_embeddings(fragrance["base_notes"]), w_base)
+    top_vec = avg_embeddings(fragrance["top_notes"], w_top)
+    mid_vec = avg_embeddings(fragrance["mid_notes"], w_mid)
+    base_vec = avg_embeddings(fragrance["base_notes"], w_base)
 
     notes_vector = (top_vec + mid_vec + base_vec) * w_notes
     accords_vector = accord_vector(fragrance["accords"]) * w_accords
@@ -186,19 +175,9 @@ for _, row in tqdm(df.iterrows(), total=len(df), desc="Processing fragrances"):
     fragrance["fragrance_vector"] = (notes_vector + accords_vector).tolist()
     upload_one("fragrances", fragrance)
 
-    # Update sets
-    all_countries.add(fragrance["country"])
-    all_brands.add(fragrance["brand"])
-    all_notes.update(fragrance["top_notes"])
-    all_notes.update(fragrance["mid_notes"])
-    all_notes.update(fragrance["base_notes"])
-    all_accords.update(fragrance["accords"])
 
 print("Updating collections")
-dump("countries", [{"name": country} for country in list(all_countries)])
-dump("brands", [{"name": brand} for brand in list(all_brands)])
-dump("notes", [{"name": note} for note in list(all_notes)])
-dump("accords", [{"name": accord} for accord in list(all_accords)])
+
 
 end_time = time.time()
 print(f"✅ Processed {len(df)} fragrances in {end_time - start_time:.2f} seconds")
