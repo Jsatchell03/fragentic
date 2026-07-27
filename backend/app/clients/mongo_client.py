@@ -10,11 +10,18 @@ db = client["fragentic"]
 def upload_one(collection_name: str, document: dict):
     if collection_name not in db.list_collection_names():
         raise ValueError(f"[{collection_name}] does not exist in db.")
-
     collection = db[collection_name]
     response = collection.insert_one(document)
 
     return response.inserted_id
+
+
+def upload_many(collection_name: str, documents: list[dict]):
+    if collection_name not in db.list_collection_names():
+        raise ValueError(f"[{collection_name}] does not exist in db.")
+
+    collection = db[collection_name]
+    collection.insert_many(documents, ordered=False)
 
 
 def get_all(collection_name: str) -> list:
@@ -36,6 +43,3 @@ def query_collection(collection_name, query):
         return None
 
     return documents
-
-
-print(get_all("descriptors"))
