@@ -8,7 +8,7 @@ def root():
     return {"message": "Hello World"}
 
 
-@app.post("/api/v1/search")
+@app.post("/api/v1/results/{result_hash}")
 def search():
     pass
 

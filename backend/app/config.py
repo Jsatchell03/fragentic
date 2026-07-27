@@ -11,23 +11,28 @@ BASE_DIR = Path(__file__).resolve().parent
 
 class OpenAIConfig(BaseModel):
     model: str
+    dimensions: int
+
+
+class RedisConfig(BaseModel):
+    key_prefix: str
 
 
 class ETLConfig(BaseModel):
     note_weight: float
     accord_weight: float
     accord_decay: float
-    top_note_weight: float
-    mid_note_weight: float
-    base_note_weight: float
+    top_notes_weight: float
+    mid_notes_weight: float
+    base_notes_weight: float
     batch_size: int
-    dimensions: int
 
 
 class AppSettings(BaseSettings):
     model_config = {"yaml_file": BASE_DIR / "config.yaml"}
     openai: OpenAIConfig
     etl: ETLConfig
+    redis: RedisConfig
 
     @classmethod
     def settings_customise_sources(

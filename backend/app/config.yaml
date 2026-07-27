@@ -1,11 +1,13 @@
 openai:
-  model: "text-embedding-3-large"
-  dimensions: 1024
+  model: "text-embedding-3-small"
+  dimensions: 512
 etl:
   note_weight: .4
-  accord_decay: .90
+  accord_decay: .85
   accord_weight: .6
-  top_note_weight: 0.25
-  mid_note_weight: 0.30
-  base_note_weight: 0.45
+  top_notes_weight: 0.25
+  mid_notes_weight: 0.30
+  base_notes_weight: 0.45
   batch_size: 2048
+redis:
+  key_prefix: "fragentic:"

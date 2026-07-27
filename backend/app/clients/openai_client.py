@@ -6,9 +6,10 @@ import numpy as np
 
 load_dotenv()
 client = OpenAI()
+
 MODEL = settings.openai.model
 BATCH_SIZE = settings.etl.batch_size
-DIMENSIONS = settings.etl.dimensions
+DIMENSIONS = settings.openai.dimensions
 
 
 def get_embedding(text: str) -> list[float]:
