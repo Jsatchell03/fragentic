@@ -11,3 +11,7 @@ etl:
   batch_size: 2048
 redis:
   key_prefix: "fragentic:"
+query:
+  descriptor_limit: 20
+  page_size: 50
+  list_query_limit: 10

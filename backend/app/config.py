@@ -18,6 +18,12 @@ class RedisConfig(BaseModel):
     key_prefix: str
 
 
+class QueryConfig(BaseModel):
+    descriptor_limit: int
+    page_size: int
+    list_query_limit: int
+
+
 class ETLConfig(BaseModel):
     note_weight: float
     accord_weight: float
@@ -33,6 +39,7 @@ class AppSettings(BaseSettings):
     openai: OpenAIConfig
     etl: ETLConfig
     redis: RedisConfig
+    query: QueryConfig
 
     @classmethod
     def settings_customise_sources(
