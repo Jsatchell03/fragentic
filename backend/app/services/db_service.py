@@ -1,3 +1,6 @@
+# from app.clients.mongo_client import
+
+
 def upload_fragrance(fragrance):
     pass
 
@@ -19,4 +22,8 @@ def find_descriptor(name):
 
 
 def find_fragrance(id):
+    pass
+
+
+def vector_search_fragrances(vector, filters: dict):
     pass

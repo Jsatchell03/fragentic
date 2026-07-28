@@ -1,7 +1,8 @@
 from typing import Optional, Literal
 from pydantic import BaseModel, Field, ConfigDict, field_validator, HttpUrl
+from app.config import settings
 
-VECTOR_DIM = 512
+VECTOR_DIM = settings.openai.dimensions
 MAX_STRING_LEN = 500  # generous ceiling for names/urls/notes
 MAX_NOTES_PER_LAYER = 20  # sanity cap on note-list sizes
 MAX_ACCORDS = 20
