@@ -4,8 +4,8 @@ from app.config import settings
 
 VECTOR_DIM = settings.openai.dimensions
 MAX_STRING_LEN = 500  # generous ceiling for names/urls/notes
-MAX_NOTES_PER_LAYER = 20  # sanity cap on note-list sizes
-MAX_ACCORDS = 20
+MAX_NOTES_PER_LAYER = 30  # sanity cap on note-list sizes
+MAX_ACCORDS = 30
 
 
 def _check_bson_safe_string(v: str, field_name: str) -> str:
@@ -45,20 +45,18 @@ class FragranceDoc(BaseModel):
     brand: str
     gender: Literal["men", "women", "unisex"]
     country: Optional[str] = None
-    popularity: Optional[int] = Field(default=None, ge=0)
+    popularity: int = Field(default=None, ge=0)
 
     top_notes: list[str] = Field(default_factory=list, max_length=MAX_NOTES_PER_LAYER)
     mid_notes: list[str] = Field(default_factory=list, max_length=MAX_NOTES_PER_LAYER)
     base_notes: list[str] = Field(default_factory=list, max_length=MAX_NOTES_PER_LAYER)
     accords: list[str] = Field(default_factory=list, max_length=MAX_ACCORDS)
 
-    top_notes_vector: Optional[list[float]] = None
-    mid_notes_vector: Optional[list[float]] = None
-    base_notes_vector: Optional[list[float]] = None
-    accords_vector: Optional[list[float]] = None
-    notes_vector: Optional[list[float]] = None
-    fragrance_vector: Optional[list[float]] = None
-
+    top_notes_vector: list[float] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)
+    mid_notes_vector: list[float] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)
+    base_notes_vector: list[float] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)
+    accords_vector: list[float] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)
+    fragrance_vector: list[float] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)
     # --- string field safety ---
 
     @field_validator("name", "brand", "country")
@@ -98,17 +96,12 @@ class FragranceDoc(BaseModel):
         "mid_notes_vector",
         "base_notes_vector",
         "accords_vector",
-        "notes_vector",
         "fragrance_vector",
     )
     @classmethod
     def check_vector(cls, v, info):
         if v is None:
             return v
-        if len(v) != VECTOR_DIM:
-            raise ValueError(
-                f"{info.field_name} must have exactly {VECTOR_DIM} dimensions, got {len(v)}"
-            )
         for x in v:
             if not isinstance(x, (int, float)):
                 raise ValueError(f"{info.field_name} must contain only numeric values")

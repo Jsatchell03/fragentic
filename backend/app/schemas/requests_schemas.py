@@ -7,18 +7,16 @@ LIST_QUERY_LIMIT = settings.query.list_query_limit
 
 
 class _Query(BaseModel):
-    brands: Optional[list[str]] = Field(
-        default_factory=list, max_length=LIST_QUERY_LIMIT
+    brands: Optional[list[str]] = Field(default=None, max_length=LIST_QUERY_LIMIT)
+    rating: Optional[float] = Field(default=None, ge=0, le=5)
+    countries: Optional[list[str]] = Field(default=None, max_length=LIST_QUERY_LIMIT)
+    popularity: Optional[list[Literal[1, 2, 3, 4, 5]]] = Field(
+        default=None, max_length=5
     )
-    rating: Optional[float] = Field(ge=0, le=5)
-    countries: Optional[list[str]] = Field(
-        default_factory=list, max_length=LIST_QUERY_LIMIT
-    )
-    popularity: Optional[int] = Field(default=None, ge=0, le=5)
     excluded_descriptors: Optional[list[str]] = Field(
-        default_factory=list, max_length=LIST_QUERY_LIMIT
+        default=None, max_length=LIST_QUERY_LIMIT
     )
-    page: int
+    page: int = Field(default=1, ge=1)
 
 
 class SearchQuery(_Query):
