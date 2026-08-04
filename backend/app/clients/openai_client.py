@@ -15,7 +15,7 @@ DIMENSIONS = settings.openai.dimensions
 def get_embedding(text: str) -> list[float]:
     response = client.embeddings.create(input=text, model=MODEL, dimensions=DIMENSIONS)
     raw_vector = response.data[0].embedding
-    return np.array(raw_vector, dtype=np.float32)
+    return raw_vector
 
 
 def get_many_embeddings(texts: list[str]) -> list[list[float]]:
@@ -27,6 +27,5 @@ def get_many_embeddings(texts: list[str]) -> list[list[float]]:
             input=chunk, model=MODEL, dimensions=DIMENSIONS
         )
         for obj in response.data:
-            results.append(np.array(obj.embedding, dtype=np.float32))
-
+            results.append(obj.embedding)
     return results

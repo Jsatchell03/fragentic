@@ -1,36 +1,62 @@
-from app.clients.openai_client import get_embedding, get_many_embeddings
-from app.services.cache_service import get_descriptor, set_descriptor, get_descriptors, set_descriptors
+from app.clients import openai_client
+from app.services import cache_service, db_service
 from app.config import settings
+from app.schemas.app_schemas import Descriptor
 import numpy as np
 
 EMBED_DIM = settings.openai.dimensions
 
 
+def l2_normalize(vector: np.ndarray) -> np.ndarray:
+    norm = np.linalg.norm(vector)
+    if norm == 0:
+        return vector  # avoid divide-by-zero on a zero vector
+    return vector / norm
+
+
 def embed_descriptors(descriptors: list[str]):
-    if not descriptors:
-        return []
-    results = get_descriptors(descriptors)
-    misses = [(i, descriptors[i]) for i, r in enumerate(results) if r is None]
+    resolved: dict[str, Descriptor] = {}
+    hits, misses = cache_service.get_descriptors(descriptors)
+    for d in hits:
+        resolved[d.name] = d
+
     if misses:
-        vectors = get_many_embeddings([m[1] for m in misses])
-        set_descriptors([(misses[i][1], vectors[i]) for i in range(len(misses))])
-        for i, (idx, _) in enumerate(misses):
-            results[idx] = vectors[i]
-    return results
+        stored_names = []
+        new_names = []
+        for name in misses:
+            if name in db_service.STORED_DESCRIPTOR_NAMES:
+                stored_names.append(name)
+            else:
+                new_names.append(name)
+
+        uncached: list[Descriptor] = []
+
+        if stored_names:
+            for d in db_service.find_descriptors(stored_names):
+                resolved[d.name] = d
+                uncached.append(d)
+
+        if new_names:
+            new_vectors = openai_client.get_many_embeddings(new_names)
+            for name, vector in zip(new_names, new_vectors):
+                d = Descriptor(name=name, list_vector=vector)
+                resolved[name] = d
+                uncached.append(d)
+
+        cache_service.set_descriptors(uncached)
+
+    return [resolved[name] for name in descriptors]
 
 
 def embed(text: str):
-    cached = get_descriptor(text)
-    if cached is None:
-        return get_embedding(text)
-    return cached
+    return openai_client.get_embedding(text)
 
 
-def avg_embeddings(notes, weight=1.0):
-    if not notes:
+def avg_vectors(vectors, weight=1.0):
+    if not vectors:
         return np.zeros(EMBED_DIM)
-    vectors = embed_descriptors(notes)
-    return weight * np.mean(vectors, axis=0)
+    avg = weight * np.mean(vectors, axis=0)
+    return avg
 
 
 def cosine_sim(vector_a, vector_b):

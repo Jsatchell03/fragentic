@@ -34,11 +34,14 @@ def get_all(collection_name: str) -> list:
     return documents
 
 
-def query_collection(collection_name, query):
+def query_collection(collection_name, query, projection=None):
     if collection_name not in db.list_collection_names():
         raise ValueError(f"[{collection_name}] does not exist in db.")
     collection = db[collection_name]
-    documents = list(collection.find(query))
+    if projection:
+        documents = list(collection.find(query, projection))
+    else:
+        documents = list(collection.find(query))
     if not documents:
         return None
 

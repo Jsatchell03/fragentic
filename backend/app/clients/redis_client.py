@@ -35,18 +35,10 @@ def get_bytes(key):
     return result
 
 
-def get_hash(key):
-    pass
-
-
 def set(key, value):
     key = KEY_PREFIX + key
     result = r.set(key, json.dumps(value))
     return result
-
-
-def set_hash(key):
-    pass
 
 
 def set_bytes(key, value):
