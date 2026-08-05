@@ -16,7 +16,6 @@ class _Query(BaseModel):
     excluded_descriptors: Optional[list[str]] = Field(
         default=None, max_length=LIST_QUERY_LIMIT
     )
-    page: int = Field(default=1, ge=1)
 
 
 class SearchQuery(_Query):

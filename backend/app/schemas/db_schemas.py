@@ -51,7 +51,7 @@ class FragranceDoc(BaseModel):
     mid_notes: list[str] = Field(default_factory=list, max_length=MAX_NOTES_PER_LAYER)
     base_notes: list[str] = Field(default_factory=list, max_length=MAX_NOTES_PER_LAYER)
     accords: list[str] = Field(default_factory=list, max_length=MAX_ACCORDS)
-
+    all_descriptors: list[str] = Field(default_factory=list)
     top_notes_vector: list[float] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)
     mid_notes_vector: list[float] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)
     base_notes_vector: list[float] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)

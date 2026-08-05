@@ -18,9 +18,13 @@ class RedisConfig(BaseModel):
     key_prefix: str
 
 
+class SearchConfig(BaseModel):
+    num_candidates: int
+    page_size: int
+
+
 class QueryConfig(BaseModel):
     descriptor_limit: int
-    page_size: int
     list_query_limit: int
 
 
@@ -40,6 +44,7 @@ class AppSettings(BaseSettings):
     etl: ETLConfig
     redis: RedisConfig
     query: QueryConfig
+    search: SearchConfig
 
     @classmethod
     def settings_customise_sources(

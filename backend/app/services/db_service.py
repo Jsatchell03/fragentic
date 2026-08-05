@@ -3,11 +3,17 @@ from app.schemas.app_schemas import Descriptor
 from app.schemas.db_schemas import DescriptorDoc, FragranceDoc
 
 STORED_DESCRIPTOR_NAMES = set(
-    descriptor["name"] for descriptor in mongo_client.get_all("descriptors")
+    descriptor["name"]
+    for descriptor in mongo_client.query_collection(
+        "descriptors", {}, {"name": 1, "_id": 0}
+    )
 )
 
 STORED_FRAGRANCE_URLS = set(
-    fragrance["fragrantica_url"] for fragrance in mongo_client.get_all("fragrances")
+    fragrance["fragrantica_url"]
+    for fragrance in mongo_client.query_collection(
+        "fragrances", {}, {"fragrantica_url": 1, "_id": 0}
+    )
 )
 
 
