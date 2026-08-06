@@ -20,6 +20,7 @@ class RedisConfig(BaseModel):
 
 class SearchConfig(BaseModel):
     num_candidates: int
+    vector_search_limit: int
     page_size: int
 
 

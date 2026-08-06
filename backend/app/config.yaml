@@ -15,6 +15,7 @@ query:
   descriptor_limit: 20
   list_query_limit: 10
 search:
-  num_candidates: 1000
+  num_candidates: 10000
+  vector_search_limit: 1000
   page_size: 100
 

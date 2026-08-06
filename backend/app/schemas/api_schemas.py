@@ -43,7 +43,12 @@ class _Query(BaseModel):
 
 
 class VectorQuery(_Query):
-    search_vector: list[FiniteFloat] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)
+    search_vector: list[FiniteFloat] = Field(
+        min_length=VECTOR_DIM, max_length=VECTOR_DIM
+    )
+    descriptors: list[DescriptorStr] = Field(
+        default_factory=list, max_length=DESCRIPTOR_LIMIT
+    )
 
 
 class FragranceQuery(_Query):
@@ -51,7 +56,9 @@ class FragranceQuery(_Query):
 
 
 class DescriptorQuery(_Query):
-    descriptors: list[DescriptorStr] = Field(default_factory=list, max_length=DESCRIPTOR_LIMIT)
+    descriptors: list[DescriptorStr] = Field(
+        default_factory=list, max_length=DESCRIPTOR_LIMIT
+    )
 
 
 class FragranceResponse(BaseModel):
