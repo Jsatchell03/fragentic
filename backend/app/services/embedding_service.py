@@ -1,7 +1,8 @@
 from app.clients import openai_client
-from app.services import cache_service, db_service
+from app.services import cache_service
 from app.config import settings
 from app.schemas.app_schemas import Descriptor
+from app.services import mongo_service
 import numpy as np
 
 EMBED_DIM = settings.openai.dimensions
@@ -24,7 +25,7 @@ def embed_descriptors(descriptors: list[str]):
         stored_names = []
         new_names = []
         for name in misses:
-            if name in db_service.STORED_DESCRIPTOR_NAMES:
+            if name in mongo_service.STORED_DESCRIPTOR_NAMES:
                 stored_names.append(name)
             else:
                 new_names.append(name)
@@ -32,7 +33,7 @@ def embed_descriptors(descriptors: list[str]):
         uncached: list[Descriptor] = []
 
         if stored_names:
-            for d in db_service.find_descriptors(stored_names):
+            for d in mongo_service.find_descriptors(stored_names):
                 resolved[d.name] = d
                 uncached.append(d)
 

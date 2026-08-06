@@ -1,6 +1,7 @@
 from pymongo import MongoClient, InsertOne
 import os
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 client = MongoClient(os.getenv("MONGO_URI"))
@@ -52,4 +53,5 @@ def execute_pipeline(collection_name, pipeline):
     if collection_name not in db.list_collection_names():
         raise ValueError(f"[{collection_name}] does not exist in db.")
     results = db[collection_name].aggregate(pipeline)
+
     return results

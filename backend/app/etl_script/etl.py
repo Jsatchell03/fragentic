@@ -1,4 +1,5 @@
 import pandas as pd
+from app.services import mongo_service
 import numpy as np
 import time
 import re
@@ -6,7 +7,7 @@ import ast
 import math
 from tqdm import tqdm
 from pathlib import Path
-from app.services import embedding_service, db_service
+from app.services import embedding_service
 from app.config import settings
 from app.schemas.db_schemas import DescriptorDoc, FragranceDoc
 
@@ -84,8 +85,8 @@ brand_map = {
 
 new_fragrances = []
 new_descriptors = []
-added_descriptor_names = set(db_service.STORED_DESCRIPTOR_NAMES)
-added_fragrance_urls = set(db_service.STORED_FRAGRANCE_URLS)
+added_descriptor_names = set(mongo_service.STORED_DESCRIPTOR_NAMES)
+added_fragrance_urls = set(mongo_service.STORED_FRAGRANCE_URLS)
 
 # Pre-build O(1) accords lookup instead of re-scanning unclean_df on every row
 url_to_accords = {}
@@ -214,119 +215,133 @@ def parse_name(name: str):
     return " ".join(words)
 
 
-# --- Main embedding loop ---
-print("Started Embedding")
-start_time = time.time()
+def run():
+    # --- Main embedding loop ---
+    print("Started Embedding")
+    start_time = time.time()
 
-for idx, row in tqdm(df.iterrows(), total=len(df), desc="Processing fragrances"):
-    url = safe_str(row.get("url"))
-    if url in added_fragrance_urls:
-        print(f"{parse_name(row.get("Perfume"))} already in db")
-        continue
-    fragrance = {}
-    fragrance["name"] = parse_name(row.get("Perfume"))
-    fragrance["fragrantica_url"] = url
-    fragrance["rating"] = safe_float(row.get("Rating Value"))
-    fragrance["rating_count"] = safe_int(row.get("Rating Count"))
-    year = safe_int(row.get("Year"))
-    if year == 0:
-        fragrance["year"] = None
+    for idx, row in tqdm(df.iterrows(), total=len(df), desc="Processing fragrances"):
+        url = safe_str(row.get("url"))
+        if url in added_fragrance_urls:
+            print(f"{parse_name(row.get("Perfume"))} already in db")
+            continue
+        fragrance = {}
+        fragrance["name"] = parse_name(row.get("Perfume"))
+        fragrance["fragrantica_url"] = url
+        fragrance["rating"] = safe_float(row.get("Rating Value"))
+        fragrance["rating_count"] = safe_int(row.get("Rating Count"))
+        year = safe_int(row.get("Year"))
+        if year == 0:
+            fragrance["year"] = None
+        else:
+            fragrance["year"] = year
+        fragrance["brand"] = parse_brand(row.get("Brand"))
+        fragrance["gender"] = safe_str(row.get("Gender"))
+        fragrance["country"] = safe_str(row.get("Country"))
+        fragrance["popularity"] = calculate_popularity(idx)
+        fragrance["top_notes"] = [
+            parse_descriptor(note) for note in safe_list(row.get("Top"))
+        ]
+        fragrance["mid_notes"] = [
+            parse_descriptor(note) for note in safe_list(row.get("Middle"))
+        ]
+        fragrance["base_notes"] = [
+            parse_descriptor(note) for note in safe_list(row.get("Base"))
+        ]
+        fragrance["accords"] = [
+            parse_descriptor(accord)
+            for accord in safe_accords(fragrance["fragrantica_url"])
+        ]
+
+        t_end = len(fragrance["top_notes"])
+        m_end = t_end + len(fragrance["mid_notes"])
+        b_end = m_end + len(fragrance["base_notes"])
+
+        all_descriptors = embedding_service.embed_descriptors(
+            fragrance["top_notes"]
+            + fragrance["mid_notes"]
+            + fragrance["base_notes"]
+            + fragrance["accords"]
+        )
+
+        fragrance["all_descriptors"] = (
+            fragrance["top_notes"]
+            + fragrance["mid_notes"]
+            + fragrance["base_notes"]
+            + fragrance["accords"]
+        )
+
+        top_notes_vector = embedding_service.avg_vectors(
+            [d.np_vector for d in all_descriptors[:t_end]]
+        )
+        mid_notes_vector = embedding_service.avg_vectors(
+            [d.np_vector for d in all_descriptors[t_end:m_end]]
+        )
+        base_notes_vector = embedding_service.avg_vectors(
+            [d.np_vector for d in all_descriptors[m_end:b_end]]
+        )
+        accords_vector = calculate_accords_vector(all_descriptors[b_end:])
+
+        notes_vector = (
+            top_notes_vector * TOP_NOTES_WEIGHT
+            + mid_notes_vector * MID_NOTES_WEIGHT
+            + base_notes_vector * BASE_NOTES_WEIGHT
+        )
+
+        fragrance_vector = notes_vector * NOTE_WEIGHT + accords_vector * ACCORD_WEIGHT
+
+        fragrance["fragrance_vector"] = embedding_service.l2_normalize(
+            fragrance_vector
+        ).tolist()
+
+        fragrance["top_notes_vector"] = embedding_service.l2_normalize(
+            top_notes_vector
+        ).tolist()
+
+        fragrance["mid_notes_vector"] = embedding_service.l2_normalize(
+            mid_notes_vector
+        ).tolist()
+
+        fragrance["base_notes_vector"] = embedding_service.l2_normalize(
+            base_notes_vector
+        ).tolist()
+
+        fragrance["accords_vector"] = embedding_service.l2_normalize(
+            accords_vector
+        ).tolist()
+
+        seen_in_fragrance: set[str] = set()
+        new_from_fragrance = []
+        for d in all_descriptors:
+            if d.name not in added_descriptor_names and d.name not in seen_in_fragrance:
+                new_from_fragrance.append(
+                    DescriptorDoc(name=d.name, vector=d.list_vector)
+                )
+                seen_in_fragrance.add(d.name)
+
+        if new_from_fragrance:
+            new_descriptors.extend(new_from_fragrance)
+            added_descriptor_names.update(d.name for d in new_from_fragrance)
+
+        new_fragrances.append(FragranceDoc(**fragrance))
+        added_fragrance_urls.add(fragrance["fragrantica_url"])
+    end_time = time.time()
+
+    print(f"✅ Processed {len(df)} fragrances in {end_time - start_time:.2f} seconds")
+
+    print("Uploading to mongo")
+    if len(new_descriptors) > 0:
+        mongo_service.upload_descriptors(new_descriptors)
+        print("Descriptors uploaded")
     else:
-        fragrance["year"] = year
-    fragrance["brand"] = parse_brand(row.get("Brand"))
-    fragrance["gender"] = safe_str(row.get("Gender"))
-    fragrance["country"] = safe_str(row.get("Country"))
-    fragrance["popularity"] = calculate_popularity(idx)
-    fragrance["top_notes"] = [
-        parse_descriptor(note) for note in safe_list(row.get("Top"))
-    ]
-    fragrance["mid_notes"] = [
-        parse_descriptor(note) for note in safe_list(row.get("Middle"))
-    ]
-    fragrance["base_notes"] = [
-        parse_descriptor(note) for note in safe_list(row.get("Base"))
-    ]
-    fragrance["accords"] = [
-        parse_descriptor(accord)
-        for accord in safe_accords(fragrance["fragrantica_url"])
-    ]
+        print("No new descriptors")
 
-    t_end = len(fragrance["top_notes"])
-    m_end = t_end + len(fragrance["mid_notes"])
-    b_end = m_end + len(fragrance["base_notes"])
+    if len(new_fragrances) > 0:
+        mongo_service.upload_fragrances(new_fragrances)
+        print("Fragrances uploaded")
+    else:
+        print("No new fragrances")
 
-    all_descriptors = embedding_service.embed_descriptors(
-        fragrance["top_notes"]
-        + fragrance["mid_notes"]
-        + fragrance["base_notes"]
-        + fragrance["accords"]
-    )
 
-    top_notes_vector = embedding_service.avg_vectors(
-        [d.np_vector for d in all_descriptors[:t_end]]
-    )
-    mid_notes_vector = embedding_service.avg_vectors(
-        [d.np_vector for d in all_descriptors[t_end:m_end]]
-    )
-    base_notes_vector = embedding_service.avg_vectors(
-        [d.np_vector for d in all_descriptors[m_end:b_end]]
-    )
-    accords_vector = calculate_accords_vector(all_descriptors[b_end:])
-
-    notes_vector = (
-        top_notes_vector * TOP_NOTES_WEIGHT
-        + mid_notes_vector * MID_NOTES_WEIGHT
-        + base_notes_vector * BASE_NOTES_WEIGHT
-    )
-
-    fragrance_vector = notes_vector * NOTE_WEIGHT + accords_vector * ACCORD_WEIGHT
-
-    fragrance["fragrance_vector"] = embedding_service.l2_normalize(
-        fragrance_vector
-    ).tolist()
-
-    fragrance["top_notes_vector"] = embedding_service.l2_normalize(
-        top_notes_vector
-    ).tolist()
-
-    fragrance["mid_notes_vector"] = embedding_service.l2_normalize(
-        mid_notes_vector
-    ).tolist()
-
-    fragrance["base_notes_vector"] = embedding_service.l2_normalize(
-        base_notes_vector
-    ).tolist()
-
-    fragrance["accords_vector"] = embedding_service.l2_normalize(
-        accords_vector
-    ).tolist()
-
-    seen_in_fragrance: set[str] = set()
-    new_from_fragrance = []
-    for d in all_descriptors:
-        if d.name not in added_descriptor_names and d.name not in seen_in_fragrance:
-            new_from_fragrance.append(DescriptorDoc(name=d.name, vector=d.list_vector))
-            seen_in_fragrance.add(d.name)
-
-    if new_from_fragrance:
-        new_descriptors.extend(new_from_fragrance)
-        added_descriptor_names.update(d.name for d in new_from_fragrance)
-
-    new_fragrances.append(FragranceDoc(**fragrance))
-    added_fragrance_urls.add(fragrance["fragrantica_url"])
-end_time = time.time()
-
-print(f"✅ Processed {len(df)} fragrances in {end_time - start_time:.2f} seconds")
-
-print("Uploading to mongo")
-if len(new_descriptors) > 0:
-    db_service.upload_descriptors(new_descriptors)
-    print("Descriptors uploaded")
-else:
-    print("No new descriptors")
-
-if len(new_fragrances) > 0:
-    db_service.upload_fragrances(new_fragrances)
-    print("Fragrances uploaded")
-else:
-    print("No new fragrances")
+if __name__ == "__main__":
+    run()
