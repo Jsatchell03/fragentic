@@ -25,7 +25,7 @@ app = FastAPI()
 
 
 @app.get("/api/v1/search/descriptors")
-def search(query: Annotated[DescriptorQuery, Query()]) -> SearchResults:
+def search_descriptors(query: Annotated[DescriptorQuery, Query()]) -> SearchResults:
     search_results = search_by_descriptors(query)
 
     return SearchResults(
@@ -37,7 +37,7 @@ def search(query: Annotated[DescriptorQuery, Query()]) -> SearchResults:
 
 
 @app.get("/api/v1/search/vector")
-def search(query: Annotated[VectorQuery, Query()]) -> SearchResults:
+def search_vector(query: Annotated[VectorQuery, Query()]) -> SearchResults:
     search_results = search_by_vector(query)
     return SearchResults(
         search_vector=search_results["search_vector"],

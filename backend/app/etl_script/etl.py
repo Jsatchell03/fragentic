@@ -1,4 +1,5 @@
 import pandas as pd
+from backend.app.services import mongo_service
 import numpy as np
 import time
 import re
@@ -6,7 +7,7 @@ import ast
 import math
 from tqdm import tqdm
 from pathlib import Path
-from app.services import embedding_service, db_service
+from app.services import embedding_service
 from app.config import settings
 from app.schemas.db_schemas import DescriptorDoc, FragranceDoc
 
@@ -84,8 +85,8 @@ brand_map = {
 
 new_fragrances = []
 new_descriptors = []
-added_descriptor_names = set(db_service.STORED_DESCRIPTOR_NAMES)
-added_fragrance_urls = set(db_service.STORED_FRAGRANCE_URLS)
+added_descriptor_names = set(mongo_service.STORED_DESCRIPTOR_NAMES)
+added_fragrance_urls = set(mongo_service.STORED_FRAGRANCE_URLS)
 
 # Pre-build O(1) accords lookup instead of re-scanning unclean_df on every row
 url_to_accords = {}
@@ -330,13 +331,13 @@ def run():
 
     print("Uploading to mongo")
     if len(new_descriptors) > 0:
-        db_service.upload_descriptors(new_descriptors)
+        mongo_service.upload_descriptors(new_descriptors)
         print("Descriptors uploaded")
     else:
         print("No new descriptors")
 
     if len(new_fragrances) > 0:
-        db_service.upload_fragrances(new_fragrances)
+        mongo_service.upload_fragrances(new_fragrances)
         print("Fragrances uploaded")
     else:
         print("No new fragrances")

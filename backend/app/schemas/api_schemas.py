@@ -23,6 +23,15 @@ DescriptorStr: TypeAlias = Annotated[
 ]
 
 
+def _check_finite(v: float) -> float:
+    if v != v or v in (float("inf"), float("-inf")):
+        raise ValueError("must be a finite number")
+    return v
+
+
+FiniteFloat: TypeAlias = Annotated[float, BeforeValidator(_check_finite)]
+
+
 class _Query(BaseModel):
     brands: Optional[list[str]] = Field(default=None, max_length=LIST_QUERY_LIMIT)
     rating: Optional[float] = Field(default=None, ge=0, le=5)
@@ -34,7 +43,7 @@ class _Query(BaseModel):
 
 
 class VectorQuery(_Query):
-    search_vector: list[float] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)
+    search_vector: list[FiniteFloat] = Field(min_length=VECTOR_DIM, max_length=VECTOR_DIM)
 
 
 class FragranceQuery(_Query):
