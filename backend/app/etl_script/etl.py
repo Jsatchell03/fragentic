@@ -1,5 +1,5 @@
 import pandas as pd
-from backend.app.services import mongo_service
+from app.services import mongo_service
 import numpy as np
 import time
 import re
