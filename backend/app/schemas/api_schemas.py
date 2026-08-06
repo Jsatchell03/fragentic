@@ -11,13 +11,24 @@ PopularityLiteral: TypeAlias = Annotated[
     BeforeValidator(lambda v: int(v) if isinstance(v, str) else v),
 ]
 
+# Allowlist: letters, digits, spaces, hyphens, apostrophes only.
+# Rejects injection-prone chars like : # $ % { } [ ] @ \ / & and MongoDB operators.
+DescriptorStr: TypeAlias = Annotated[
+    str,
+    Field(
+        min_length=1,
+        max_length=100,
+        pattern=r"^[a-zA-Z0-9 '\-]+$",
+    ),
+]
+
 
 class _Query(BaseModel):
     brands: Optional[list[str]] = Field(default=None, max_length=LIST_QUERY_LIMIT)
     rating: Optional[float] = Field(default=None, ge=0, le=5)
     countries: Optional[list[str]] = Field(default=None, max_length=LIST_QUERY_LIMIT)
     popularity: Optional[list[PopularityLiteral]] = Field(default=None, max_length=5)
-    excluded_descriptors: Optional[list[str]] = Field(
+    excluded_descriptors: Optional[list[DescriptorStr]] = Field(
         default=None, max_length=LIST_QUERY_LIMIT
     )
 
@@ -31,7 +42,7 @@ class FragranceQuery(_Query):
 
 
 class DescriptorQuery(_Query):
-    descriptors: list[str] = Field(default_factory=list, max_length=DESCRIPTOR_LIMIT)
+    descriptors: list[DescriptorStr] = Field(default_factory=list, max_length=DESCRIPTOR_LIMIT)
 
 
 class FragranceResponse(BaseModel):
