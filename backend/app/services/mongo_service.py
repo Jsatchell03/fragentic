@@ -41,7 +41,7 @@ def upload_fragrances(fragrances: list[FragranceDoc]):
     )
 
 
-def find_fragrance(id):
+def execute_fragrance_search(filter_component, vector_component, keyword_component):
     pass
 
 
