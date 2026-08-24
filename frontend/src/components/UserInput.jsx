@@ -77,30 +77,8 @@ function UserInput() {
       });
   };
 
-  const pollBackend = async () => {
-    if (!backendAwake) {
-      try {
-        const res = await fetch(`${API_URL}/wakeup`);
-        if (res.ok) {
-          setBackendAwake(true);
-          const data = await res.json();
-          console.log(data);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  };
-
-
   useEffect(() => {
     fetchFilters();
-    pollBackend();
-    setTimeout(() => {
-      window.alert(
-        "Spinning Up Backend. Search results may take up to a minute."
-      );
-    }, 100);
   }, []);
 
   const didMount = useRef(false);
