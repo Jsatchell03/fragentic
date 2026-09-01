@@ -2,15 +2,13 @@ import React, { useState } from "react";
 import SearchBar from "./SearchBar";
 import Tag from "./Tag";
 import ButtonTag from "./ButtonTag";
+import { DESCRIPTORS } from "../constants.js";
 
-export default function DescriptorSearch({
-  descriptors,
-  updateQuery,
-  currQuery,
-  selectedDescriptors,
-  setSelectedDescriptors,
-}) {
-  const currDescriptors = selectedDescriptors || [];
+export default function DescriptorSearch({ queryDescriptors, updateQuery }) {
+  const [currDescriptors, setCurrDescriptors] = useState(
+    queryDescriptors || [],
+  );
+
   const commonDescriptors = [
     "wood",
     "citrus",
@@ -63,21 +61,13 @@ export default function DescriptorSearch({
     "benzoin",
     "cinnamon",
   ].filter((n) => !currDescriptors.includes(n));
+
   const removeDescriptor = (descriptor) => {
-    let newCurrDescriptors = [...currDescriptors].filter(
-      (n) => n !== descriptor,
-    );
-    setSelectedDescriptors(newCurrDescriptors);
+    setCurrDescriptors([...currDescriptors].filter((n) => n !== descriptor));
   };
 
-  const updateCurrDescriptors = (descriptor) => {
-    let newCurrDescriptors = [...currDescriptors];
-    newCurrDescriptors.push(descriptor);
-    setSelectedDescriptors(newCurrDescriptors);
-  };
-
-  const search = () => {
-    updateQuery({ ...currQuery, descriptors: selectedDescriptors });
+  const addDescriptor = (descriptor) => {
+    setCurrDescriptors([...currDescriptors, descriptor]);
   };
 
   return (
@@ -100,13 +90,27 @@ export default function DescriptorSearch({
         currDescriptors.map((descriptor, index) => (
           <Tag name={descriptor} key={index} removeTag={removeDescriptor} />
         ))}
+
       <SearchBar
         selectedOptions={currDescriptors}
-        updateSelectedOptions={updateCurrDescriptors}
-        triggerSearch={search}
-        options={descriptors}
+        updateSelectedOptions={addDescriptor}
+        triggerSearch={() => updateQuery(currDescriptors)}
+        options={DESCRIPTORS}
         name={"descriptor-search"}
+        active={
+          !(
+            currDescriptors.length === 0 ||
+            (queryDescriptors !== null &&
+              currDescriptors.length === queryDescriptors.length &&
+              [...currDescriptors]
+                .sort()
+                .every(
+                  (val, index) => val === [...queryDescriptors].sort()[index],
+                ))
+          )
+        }
       />
+
       <div className="mt-2">
         <p className="mb-2">Most common notes and accords</p>
         {commonDescriptors.slice(0, 10).map((descriptor, index) => {
@@ -114,7 +118,7 @@ export default function DescriptorSearch({
             <ButtonTag
               key={index}
               name={descriptor}
-              action={() => updateCurrDescriptors(descriptor)}
+              action={() => addDescriptor(descriptor)}
             />
           );
         })}

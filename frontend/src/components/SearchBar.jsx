@@ -5,6 +5,7 @@ export default function SearchBar({
   selectedOptions,
   updateSelectedOptions,
   triggerSearch = null,
+  active = true,
   optionCleaner = null,
   options,
   placeholder,
@@ -12,7 +13,7 @@ export default function SearchBar({
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredOptions, setFilteredOptions] = useState(
-    options.filter((option) => !selectedOptions.includes(option.toLowerCase()))
+    options.filter((option) => !selectedOptions.includes(option.toLowerCase())),
   );
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef(null);
@@ -71,7 +72,7 @@ export default function SearchBar({
       setFilteredOptions(
         options
           .filter((option) => !selectedOptions.includes(option.toLowerCase()))
-          .slice(0, 5)
+          .slice(0, 5),
       );
     }
 
@@ -112,17 +113,20 @@ export default function SearchBar({
         />
         {triggerSearch && (
           <button
-            onClick={triggerSearch}
-            className="
-            absolute top-1/2 right-2 -translate-y-1/2
-            bg-purple-600 
-            hover:bg-purple-700 
+            onClick={() => {
+              if (active) {
+                triggerSearch();
+              }
+            }}
+            className={`
+            absolute top-1/2 right-2 -translate-y-1/2 ${active ? "bg-purple-600 hover:bg-purple-700" : "bg-gray-300"}
             text-white 
             font-medium 
             px-4 py-2 
             rounded-xl 
             shadow-sm
-          "
+            ${active && "cursor-pointer"}
+            `}
           >
             Search
           </button>

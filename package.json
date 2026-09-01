@@ -1,0 +1,12 @@
+{
+	"devDependencies": {
+		"concurrently": "^10.0.5"
+	},
+
+  	"scripts": {
+    "dev:backend": "ssh -f -N vps_dev_mongo && ssh -f -N vps_dev_redis && cd backend && uv run uvicorn main:app --reload --port 8000",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\""
+  }
+}
+

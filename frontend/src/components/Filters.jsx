@@ -3,18 +3,9 @@ import FilterSearch from "./FilterSearch";
 import FilterSelect from "./FilterSelect";
 import FilterRating from "./FilterRating";
 import FilterRange from "./FilterRange";
+import { DESCRIPTORS, COUNTRIES, BRANDS } from "../constants.js";
 
-export default function Filters({
-  descriptors,
-  notes,
-  accords,
-  countries,
-  brands,
-  currQuery,
-  selectedFilters,
-  setSelectedFilters,
-  updateQuery,
-}) {
+export default function Filters({ queryFilters, updateQuery }) {
   const currFilters = selectedFilters || {
     "Exclude Notes/Accords": [],
     "Country of Origin": [],
@@ -24,6 +15,13 @@ export default function Filters({
     PopularityRange: [],
     Rating: 1,
   };
+
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedGender, setSelectedGender] = useState([]);
+  const [minRating, setMinRating] = useState(0);
+  const [selectedCountries, setSelectedCountries] = useState([]);
+  const [excludedDescriptors, setExcludedDescriptors] = useState([]);
+  const [popularityRange, setPopularityRange] = useState([]);
 
   function capitalizeBrand(name) {
     return name
@@ -60,7 +58,7 @@ export default function Filters({
 
       <FilterSearch
         title={"Brand"}
-        options={brands}
+        options={BRANDS}
         placeholder={"Search for a brand"}
         currFilters={currFilters}
         setCurrFilters={setSelectedFilters}
@@ -75,7 +73,7 @@ export default function Filters({
 
       <FilterSearch
         title={"Country of Origin"}
-        options={countries}
+        options={COUNTRIES}
         placeholder={"Search for a country"}
         currFilters={currFilters}
         setCurrFilters={setSelectedFilters}
@@ -91,18 +89,13 @@ export default function Filters({
 
       <FilterSearch
         title={"Exclude Notes/Accords"}
-        options={descriptors}
+        options={DESCRIPTORS}
         placeholder={"Search for a note/accord"}
         currFilters={currFilters}
         setCurrFilters={setSelectedFilters}
       />
 
-      <button
-        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 rounded-lg shadow-sm focus:outline-none transition-colors"
-        onClick={() => {
-          updateQuery({ ...currQuery, filters: currFilters });
-        }}
-      >
+      <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 rounded-lg shadow-sm focus:outline-none transition-colors">
         Apply Filters
       </button>
     </div>
