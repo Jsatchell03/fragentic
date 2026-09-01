@@ -3,17 +3,15 @@ import React, { useState } from "react";
 export default function FilterSelect({
   title,
   options,
-  currFilters,
-  setCurrFilters,
+  currValue,
+  setCurrValue,
 }) {
-  const selected = currFilters[title] || [];
-
   const toggleOption = (option) => {
-    const newSelected = selected.includes(option)
-      ? selected.filter((x) => x !== option)
-      : [...selected, option];
-
-    setCurrFilters({ ...currFilters, [title]: newSelected });
+    setCurrValue(
+      currValue.includes(option)
+        ? currValue.filter((x) => x !== option)
+        : [...currValue, option],
+    );
   };
 
   return (
@@ -30,7 +28,7 @@ export default function FilterSelect({
               <input
                 className=" w-5 h-5 accent-purple-600 rounded cursor-pointer border-10 hover:border-purple-700"
                 type="checkbox"
-                checked={selected.includes(option)}
+                checked={currValue.includes(option)}
                 readOnly={true}
               ></input>
               <label>{option}</label>

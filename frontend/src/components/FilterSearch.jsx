@@ -6,32 +6,23 @@ export default function FilterSearch({
   title,
   options,
   placeholder,
-  currFilters,
-  setCurrFilters,
+  currValue,
+  setCurrValue,
   optionCleaner,
 }) {
-  const [selectedOptions, setSelectedOptions] = useState(currFilters[title]);
-
   const updateFilters = (option) => {
-    const newSelectedOptions = [...selectedOptions, option];
-    setSelectedOptions(newSelectedOptions);
-
-    const newFilters = { ...currFilters, [title]: newSelectedOptions };
-    setCurrFilters(newFilters);
+    setCurrValue([...currValue, option]);
   };
 
   const toggleOption = (option) => {
-    const newSelected = selectedOptions.filter((o) => o !== option);
-    setSelectedOptions(newSelected);
-    const newFilters = { ...currFilters, [title]: newSelected };
-    setCurrFilters(newFilters);
+    setCurrValue(currValue.filter((o) => o !== option));
   };
 
   return (
     <div className="mb-5">
       <p className="mb-2">{title}</p>
-      {selectedOptions.length > 0 &&
-        selectedOptions.map((option) => (
+      {currValue.length > 0 &&
+        currValue.map((option) => (
           <Tag
             name={option}
             key={option}
@@ -40,7 +31,7 @@ export default function FilterSearch({
           />
         ))}
       <SearchBar
-        selectedOptions={selectedOptions}
+        selectedOptions={currValue}
         updateSelectedOptions={updateFilters}
         options={options}
         optionCleaner={optionCleaner}

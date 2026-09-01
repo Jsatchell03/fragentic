@@ -1,14 +1,12 @@
 import { useState } from "react";
 import React from "react";
 
-export default function FilterRating({ title, currFilters, setCurrFilters }) {
+export default function FilterRating({ title, currValue, setCurrValue }) {
   const maxStars = 4;
-  const [rating, setRating] = useState(currFilters[title] || 1);
   const [hover, setHover] = useState(0);
 
   const handleClick = (value) => {
-    setRating(value);
-    setCurrFilters({ ...currFilters, [title]: value });
+    setCurrValue(value);
   };
 
   return (
@@ -28,7 +26,7 @@ export default function FilterRating({ title, currFilters, setCurrFilters }) {
               >
                 <svg
                   className={`w-6 h-6 ${
-                    star <= (hover || rating)
+                    star <= (hover || currValue)
                       ? "text-yellow-400"
                       : "text-gray-300"
                   }`}
@@ -41,7 +39,7 @@ export default function FilterRating({ title, currFilters, setCurrFilters }) {
             ))}
           </div>
         </div>
-        <p>{rating} star(s) & up</p>
+        <p>{currValue} star(s) & up</p>
       </div>
     </>
   );

@@ -100,8 +100,7 @@ export default function DescriptorSearch({ queryDescriptors, updateQuery }) {
         active={
           !(
             currDescriptors.length === 0 ||
-            (queryDescriptors !== null &&
-              currDescriptors.length === queryDescriptors.length &&
+            (currDescriptors.length === queryDescriptors.length &&
               [...currDescriptors]
                 .sort()
                 .every(

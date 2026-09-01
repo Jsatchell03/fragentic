@@ -6,22 +6,33 @@ import FilterRange from "./FilterRange";
 import { DESCRIPTORS, COUNTRIES, BRANDS } from "../constants.js";
 
 export default function Filters({ queryFilters, updateQuery }) {
-  const currFilters = selectedFilters || {
-    "Exclude Notes/Accords": [],
-    "Country of Origin": [],
-    Brand: [],
-    Gender: [],
-    Popularity: [],
-    PopularityRange: [],
-    Rating: 1,
+  const [selectedBrands, setSelectedBrands] = useState(queryFilters.brands);
+  const [selectedGenders, setSelectedGenders] = useState(queryFilters.genders);
+  const [minRating, setMinRating] = useState(queryFilters.rating);
+  const [selectedCountries, setSelectedCountries] = useState(
+    queryFilters.countries,
+  );
+  const [excludedDescriptors, setExcludedDescriptors] = useState(
+    queryFilters.excludedDescriptors,
+  );
+  const [popularityRange, setPopularityRange] = useState(
+    queryFilters.popularity,
+  );
+
+  const arraysAreDiff = (arr1, arr2) => {
+    if (arr1.length !== arr2.length) return true;
+    const sorted1 = [...arr1].sort();
+    const sorted2 = [...arr2].sort();
+    return sorted1.some((val, idx) => val !== sorted2[idx]);
   };
 
-  const [selectedBrands, setSelectedBrands] = useState([]);
-  const [selectedGender, setSelectedGender] = useState([]);
-  const [minRating, setMinRating] = useState(0);
-  const [selectedCountries, setSelectedCountries] = useState([]);
-  const [excludedDescriptors, setExcludedDescriptors] = useState([]);
-  const [popularityRange, setPopularityRange] = useState([]);
+  const buttonActive =
+    arraysAreDiff(selectedBrands, queryFilters.brands) ||
+    arraysAreDiff(selectedGenders, queryFilters.genders) ||
+    arraysAreDiff(selectedCountries, queryFilters.countries) ||
+    arraysAreDiff(excludedDescriptors, queryFilters.excludedDescriptors) ||
+    arraysAreDiff(popularityRange, queryFilters.popularity) ||
+    minRating !== queryFilters.rating;
 
   function capitalizeBrand(name) {
     return name
@@ -44,7 +55,6 @@ export default function Filters({ queryFilters, updateQuery }) {
       return arr.join(" ");
     }
   }
-
   return (
     <div className="w-full bg-white rounded-xl shadow-md px-4 py-4 space-y-6">
       <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
@@ -52,50 +62,64 @@ export default function Filters({ queryFilters, updateQuery }) {
       <FilterSelect
         title={"Gender"}
         options={["For Men", "For Women", "Unisex"]}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
+        currValue={selectedGenders}
+        setCurrValue={setSelectedGenders}
       />
 
       <FilterSearch
         title={"Brand"}
         options={BRANDS}
         placeholder={"Search for a brand"}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
+        currValue={selectedBrands}
+        setCurrValue={setSelectedBrands}
         optionCleaner={capitalizeBrand}
       />
 
       <FilterRating
         title={"Rating"}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
+        currValue={minRating}
+        setCurrValue={setMinRating}
       />
 
       <FilterSearch
         title={"Country of Origin"}
         options={COUNTRIES}
         placeholder={"Search for a country"}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
+        currValue={selectedCountries}
+        setCurrValue={setSelectedCountries}
         optionCleaner={cleanCountryName}
       />
 
-      <FilterRange
+      {/* <FilterRange
         title={"Popularity"}
         options={["Obscure", "Uncommon", "Moderate", "Well-Known", "Common"]}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
-      />
+        currValue={popularityRange}
+        setCurrFilters={setPopularityRange}
+      /> */}
 
       <FilterSearch
         title={"Exclude Notes/Accords"}
         options={DESCRIPTORS}
         placeholder={"Search for a note/accord"}
-        currFilters={currFilters}
-        setCurrFilters={setSelectedFilters}
+        currValue={excludedDescriptors}
+        setCurrValue={setExcludedDescriptors}
       />
 
-      <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 rounded-lg shadow-sm focus:outline-none transition-colors">
+      <button
+        className={`w-full ${buttonActive ? "bg-purple-600 hover:bg-purple-700 cursor-pointer" : "bg-gray-300"} text-white font-medium py-2 rounded-lg shadow-sm focus:outline-none transition-colors`}
+        onClick={() => {
+          if (buttonActive) {
+            updateQuery({
+              brands: selectedBrands,
+              countries: selectedCountries,
+              genders: selectedGenders,
+              excludedDescriptors: excludedDescriptors,
+              rating: minRating,
+              popularity: popularityRange,
+            });
+          }
+        }}
+      >
         Apply Filters
       </button>
     </div>

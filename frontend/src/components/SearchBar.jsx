@@ -119,13 +119,12 @@ export default function SearchBar({
               }
             }}
             className={`
-            absolute top-1/2 right-2 -translate-y-1/2 ${active ? "bg-purple-600 hover:bg-purple-700" : "bg-gray-300"}
+            absolute top-1/2 right-2 -translate-y-1/2 ${active ? "bg-purple-600 hover:bg-purple-700 cursor-pointer" : "bg-gray-300"}
             text-white 
             font-medium 
             px-4 py-2 
             rounded-xl 
             shadow-sm
-            ${active && "cursor-pointer"}
             `}
           >
             Search

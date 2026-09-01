@@ -7,11 +7,13 @@ import Footer from "./components/Footer";
 
 function App() {
   const [query, setQuery] = useState({
-    descriptors: null,
-    brands: null,
-    countries: null,
-    popularity: null,
-    rating: null,
+    descriptors: [],
+    genders: [],
+    brands: [],
+    countries: [],
+    popularity: [],
+    excludedDescriptors: [],
+    rating: 0,
   });
 
   const { descriptors, ...queryFilters } = query;
@@ -19,10 +21,12 @@ function App() {
   const updateDescriptors = (newDescriptors) => {
     setQuery({ ...query, descriptors: newDescriptors });
   };
+
+  const updateFilters = (newFilters) => {
+    setQuery({ ...newFilters, descriptors: query.descriptors });
+  };
+
   console.log(query);
-
-  const updateFilters = (newFilters) => {};
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       <Header />
@@ -31,7 +35,7 @@ function App() {
           queryDescriptors={query.descriptors}
           updateQuery={updateDescriptors}
         />
-        {/* <Filters queryFilters={queryFilters} updateQuery={updateFilters} /> */}
+        <Filters queryFilters={queryFilters} updateQuery={updateFilters} />
         {/* <Results/> */}
       </main>
       <Footer />
