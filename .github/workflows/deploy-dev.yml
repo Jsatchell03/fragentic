@@ -1,3 +1,7 @@
+permissions:
+  packages: write
+  contents: read
+
 name: Deploy Dev
 on:
   push:
