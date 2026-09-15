@@ -11,5 +11,6 @@ dependencies = [
     "pydantic-settings[yaml]>=2.14.2",
     "redis>=8.0.1",
     "tqdm>=4.68.4",
+    "uvicorn>=0.53.0",
 ]
 
