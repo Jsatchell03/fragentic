@@ -215,7 +215,7 @@ def parse_name(name: str):
     return " ".join(words)
 
 
-def run():
+async def run():
     # --- Main embedding loop ---
     print("Started Embedding")
     start_time = time.time()
@@ -257,7 +257,7 @@ def run():
         m_end = t_end + len(fragrance["mid_notes"])
         b_end = m_end + len(fragrance["base_notes"])
 
-        all_descriptors = embedding_service.embed_descriptors(
+        all_descriptors = await embedding_service.embed_descriptors(
             fragrance["top_notes"]
             + fragrance["mid_notes"]
             + fragrance["base_notes"]
@@ -331,17 +331,18 @@ def run():
 
     print("Uploading to mongo")
     if len(new_descriptors) > 0:
-        mongo_service.upload_descriptors(new_descriptors)
+        await mongo_service.upload_descriptors(new_descriptors)
         print("Descriptors uploaded")
     else:
         print("No new descriptors")
 
     if len(new_fragrances) > 0:
-        mongo_service.upload_fragrances(new_fragrances)
+        await mongo_service.upload_fragrances(new_fragrances)
         print("Fragrances uploaded")
     else:
         print("No new fragrances")
 
 
 if __name__ == "__main__":
-    run()
+    import asyncio
+    asyncio.run(run())
