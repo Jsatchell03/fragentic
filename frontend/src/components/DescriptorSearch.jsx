@@ -4,9 +4,14 @@ import Tag from "./Tag";
 import ButtonTag from "./ButtonTag";
 import { DESCRIPTORS } from "../constants.js";
 
-export default function DescriptorSearch({ queryDescriptors, updateQuery }) {
+export default function DescriptorSearch({
+  initialDescriptors,
+  searchActive,
+  updateCurrQuery,
+  executeSearch,
+}) {
   const [currDescriptors, setCurrDescriptors] = useState(
-    queryDescriptors || [],
+    initialDescriptors || [],
   );
 
   const commonDescriptors = [
@@ -63,11 +68,15 @@ export default function DescriptorSearch({ queryDescriptors, updateQuery }) {
   ].filter((n) => !currDescriptors.includes(n));
 
   const removeDescriptor = (descriptor) => {
-    setCurrDescriptors([...currDescriptors].filter((n) => n !== descriptor));
+    const newList = currDescriptors.filter((n) => n !== descriptor);
+    setCurrDescriptors(newList);
+    updateCurrQuery({ descriptors: newList });
   };
 
   const addDescriptor = (descriptor) => {
-    setCurrDescriptors([...currDescriptors, descriptor]);
+    const newList = [...currDescriptors, descriptor];
+    setCurrDescriptors(newList);
+    updateCurrQuery({ descriptors: newList });
   };
 
   return (
@@ -94,20 +103,10 @@ export default function DescriptorSearch({ queryDescriptors, updateQuery }) {
       <SearchBar
         selectedOptions={currDescriptors}
         updateSelectedOptions={addDescriptor}
-        triggerSearch={() => updateQuery(currDescriptors)}
+        triggerSearch={executeSearch}
         options={DESCRIPTORS}
         name={"descriptor-search"}
-        active={
-          !(
-            currDescriptors.length === 0 ||
-            (currDescriptors.length === queryDescriptors.length &&
-              [...currDescriptors]
-                .sort()
-                .every(
-                  (val, index) => val === [...queryDescriptors].sort()[index],
-                ))
-          )
-        }
+        active={searchActive}
       />
 
       <div className="mt-2">

@@ -1,8 +1,7 @@
 import React from "react";
-import BuyOnAmazon from "./BuyOnAmazon";
 
 export default function FragranceCard({ fragrance }) {
-  const { name, brand, rating, descriptors, url, gender, score } = fragrance;
+  const { name, brand, rating, descriptors, url, gender } = fragrance;
 
   const displayedDescriptors = descriptors.slice(0, 15);
 
@@ -34,12 +33,9 @@ export default function FragranceCard({ fragrance }) {
     <div className="flex flex-col justify-between bg-white shadow-md rounded-xl p-4 hover:shadow-xl transition-shadow duration-300 h-full">
       <div>
         {/* Name */}
-        <div className="mb-1 flex flex-row justify-between items-start gap-2">
-          <div className="text-xl font-bold text-gray-800 flex-1">
+        <div className="mb-1">
+          <div className="text-xl font-bold text-gray-800">
             {capitalizeName(name)}
-          </div>
-          <div className="text-xs text-gray-500 whitespace-nowrap">
-            {Math.trunc(score * 100) + "% match"}
           </div>
         </div>
 
@@ -99,11 +95,6 @@ export default function FragranceCard({ fragrance }) {
             </span>
           </div>
         </div>
-        <BuyOnAmazon
-          name={capitalizeName(name)}
-          brand={capitalizeBrand(brand)}
-          gender={capitalizeGender(gender)}
-        />
       </div>
     </div>
   );

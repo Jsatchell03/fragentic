@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi import Query
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Annotated
 from app.services.search_service import (
     search_by_descriptors,
@@ -17,6 +18,13 @@ from app.schemas.api_schemas import (
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # @app.get("/api/v1/search/fragrance/{id}")
 # def search(query: Annotated[FragranceQuery, Query()]) -> SearchResults:
@@ -31,18 +39,18 @@ def search_descriptors(query: Annotated[DescriptorQuery, Query()]) -> SearchResu
     return SearchResults(
         search_vector=search_results["search_vector"].tolist(),
         fragrances=[
-            FragranceResponse(**fragrance) for fragrance in search_results["fragrances"]
+            FragranceResponse.model_validate(fragrance) for fragrance in search_results["fragrances"]
         ],
     )
 
 
-@app.get("/api/v1/search/vector")
-def search_vector(query: Annotated[VectorQuery, Query()]) -> SearchResults:
+@app.post("/api/v1/search/vector")
+def search_vector(query: VectorQuery) -> SearchResults:
     search_results = search_by_vector(query)
     return SearchResults(
         search_vector=search_results["search_vector"],
         fragrances=[
-            FragranceResponse(**fragrance) for fragrance in search_results["fragrances"]
+            FragranceResponse.model_validate(fragrance) for fragrance in search_results["fragrances"]
         ],
     )
 

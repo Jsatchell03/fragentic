@@ -1,5 +1,5 @@
 from typing import Optional, Literal, TypeAlias, Annotated
-from pydantic import BaseModel, Field, BeforeValidator, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, BeforeValidator, HttpUrl
 from app.config import settings
 
 DESCRIPTOR_LIMIT = settings.query.descriptor_limit
@@ -62,6 +62,8 @@ class DescriptorQuery(_Query):
 
 
 class FragranceResponse(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     name: str
     rating: float
     brand: str
@@ -71,6 +73,8 @@ class FragranceResponse(BaseModel):
     base_notes: list[str]
     accords: list[str]
     score: float
+    url: str = Field(alias="fragrantica_url")
+    popularity: int
 
 
 class SearchResults(BaseModel):

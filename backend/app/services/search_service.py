@@ -61,6 +61,8 @@ def search_by_descriptors(query: DescriptorQuery):
                 "rating": 1,
                 "gender": 1,
                 "all_descriptors": 1,
+                "fragrantica_url": 1,
+                "popularity": 1,
                 "vector_score": {"$meta": "vectorSearchScore"},
             }
         },
@@ -185,6 +187,8 @@ def search_by_vector(query):
                 "rating": 1,
                 "gender": 1,
                 "all_descriptors": 1,
+                "fragrantica_url": 1,
+                "popularity": 1,
                 "vector_score": {"$meta": "vectorSearchScore"},
             }
         },

@@ -1,18 +1,14 @@
-import { useState } from "react";
 import React from "react";
 import Tag from "./Tag";
-export default function FilterRange({
-  title,
-  options,
-  currFilters,
-  setCurrFilters,
-}) {
-  const selected = currFilters[title] || [];
-  const filterRange = currFilters[title + "Range"] || [];
+
+export default function FilterRange({ title, options, currValue, setCurrValue }) {
   const optionMaping = {};
   options.forEach((option, indx) => {
-    optionMaping[option] = indx;
+    optionMaping[option] = indx + 1;
   });
+
+  const selected = currValue || [];
+
   const getFilterRange = (selected) => {
     if (selected.length === 0) return [];
     let newFilterRange = [[selected[0], selected[0]]];
@@ -31,17 +27,16 @@ export default function FilterRange({
     }
     return newFilterRange;
   };
+
+  const filterRange = getFilterRange(selected);
+
   const toggleOption = (option) => {
     const newSelected = selected.includes(optionMaping[option])
-      ? selected.filter((x) => x !== optionMaping[option]).sort()
-      : [...selected, optionMaping[option]].sort();
-    const newFilterRange = getFilterRange(newSelected);
-    setCurrFilters({
-      ...currFilters,
-      [title]: newSelected,
-      [title + "Range"]: newFilterRange,
-    });
+      ? selected.filter((x) => x !== optionMaping[option]).sort((a, b) => a - b)
+      : [...selected, optionMaping[option]].sort((a, b) => a - b);
+    setCurrValue(newSelected);
   };
+
   return (
     <div>
       <p className="mb-2">{title}</p>
@@ -51,17 +46,12 @@ export default function FilterRange({
             key={index}
             removeTag={(r) => {
               const newSelected = selected.filter((s) => s < r[0] || s > r[1]);
-              const newFilterRange = getFilterRange(newSelected);
-              setCurrFilters({
-                ...currFilters,
-                [title]: newSelected,
-                [title + "Range"]: newFilterRange,
-              });
+              setCurrValue(newSelected);
             }}
             optionCleaner={(r) =>
-              r[0] == r[1]
-                ? options[r[0]]
-                : options[r[0]] + " to " + options[r[1]]
+              r[0] === r[1]
+                ? options[r[0] - 1]
+                : options[r[0] - 1] + " to " + options[r[1] - 1]
             }
             name={range}
           />
