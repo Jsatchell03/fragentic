@@ -2,7 +2,7 @@ FROM node:24-alpine AS deps
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm approve-builds esbuild && pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 FROM node:24-alpine AS build
 WORKDIR /app
