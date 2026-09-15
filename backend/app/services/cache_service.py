@@ -27,23 +27,21 @@ def bytes_to_vector(raw: bytes | None) -> list[float] | None:
     return arr.tolist()
 
 
-def get_many_vectors(keys) -> list[list[float] | None]:
-    raw_results = get_many_bytes(keys)
+async def get_many_vectors(keys) -> list[list[float] | None]:
+    raw_results = await get_many_bytes(keys)
     return [bytes_to_vector(raw) for raw in raw_results]
 
 
-def get_descriptor(name: str):
-    raw = get_bytes(f"descriptor:{name}")
-
+async def get_descriptor(name: str):
+    raw = await get_bytes(f"descriptor:{name}")
     if raw is None:
         return None
-
     vector = bytes_to_vector(raw)
     return Descriptor(name=name, list_vector=vector)
 
 
-def get_descriptors(names):
-    raw_bytes = get_many_bytes([f"descriptor:{name}" for name in names])
+async def get_descriptors(names):
+    raw_bytes = await get_many_bytes([f"descriptor:{name}" for name in names])
     hits = []
     misses = []
     for i in range(len(raw_bytes)):
@@ -53,18 +51,16 @@ def get_descriptors(names):
             )
         else:
             misses.append(names[i])
-
     return (hits, misses)
 
 
-def set_descriptor(descriptor: Descriptor):
-    result = set_bytes(f"descriptor:{descriptor.name}", descriptor.np_vector.tobytes())
-    return result
+async def set_descriptor(descriptor: Descriptor):
+    return await set_bytes(f"descriptor:{descriptor.name}", descriptor.np_vector.tobytes())
 
 
-def set_descriptors(descriptors: list[Descriptor]):
+async def set_descriptors(descriptors: list[Descriptor]):
     mapping = {
         f"descriptor:{descriptor.name}": descriptor.np_vector.tobytes()
         for descriptor in descriptors
     }
-    mset_bytes(mapping)
+    await mset_bytes(mapping)

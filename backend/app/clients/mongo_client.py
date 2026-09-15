@@ -1,57 +1,48 @@
-from pymongo import MongoClient, InsertOne
+from motor.motor_asyncio import AsyncIOMotorClient
 import os
 from dotenv import load_dotenv
-import json
 
 load_dotenv()
-client = MongoClient(os.getenv("MONGO_URI"))
+client = AsyncIOMotorClient(os.getenv("MONGO_URI"))
 db = client["fragentic"]
 
 
-def upload_one(collection_name: str, document: dict):
-    if collection_name not in db.list_collection_names():
+async def upload_one(collection_name: str, document: dict):
+    if collection_name not in await db.list_collection_names():
         raise ValueError(f"[{collection_name}] does not exist in db.")
     collection = db[collection_name]
-    response = collection.insert_one(document)
-
+    response = await collection.insert_one(document)
     return response.inserted_id
 
 
-def upload_many(collection_name: str, documents: list[dict]):
-    if collection_name not in db.list_collection_names():
+async def upload_many(collection_name: str, documents: list[dict]):
+    if collection_name not in await db.list_collection_names():
         raise ValueError(f"[{collection_name}] does not exist in db.")
-
     collection = db[collection_name]
-    collection.insert_many(documents, ordered=False)
+    await collection.insert_many(documents, ordered=False)
 
 
-def get_all(collection_name: str) -> list:
-    if collection_name not in db.list_collection_names():
+async def get_all(collection_name: str) -> list:
+    if collection_name not in await db.list_collection_names():
         raise ValueError(f"[{collection_name}] does not exist in db.")
-
     collection = db[collection_name]
-    documents = list(collection.find({}))
-
-    return documents
+    return await collection.find({}).to_list(None)
 
 
-def query_collection(collection_name, query, projection=None):
-    if collection_name not in db.list_collection_names():
+async def query_collection(collection_name, query, projection=None):
+    if collection_name not in await db.list_collection_names():
         raise ValueError(f"[{collection_name}] does not exist in db.")
     collection = db[collection_name]
     if projection:
-        documents = list(collection.find(query, projection))
+        documents = await collection.find(query, projection).to_list(None)
     else:
-        documents = list(collection.find(query))
+        documents = await collection.find(query).to_list(None)
     if not documents:
         return None
-
     return documents
 
 
-def execute_pipeline(collection_name, pipeline):
-    if collection_name not in db.list_collection_names():
+async def execute_pipeline(collection_name, pipeline):
+    if collection_name not in await db.list_collection_names():
         raise ValueError(f"[{collection_name}] does not exist in db.")
-    results = db[collection_name].aggregate(pipeline)
-
-    return results
+    return await db[collection_name].aggregate(pipeline).to_list(None)

@@ -28,12 +28,12 @@ def build_filter_component(filters):
     return {"$and": res}
 
 
-def search_by_descriptors(query: DescriptorQuery):
+async def search_by_descriptors(query: DescriptorQuery):
     search_vector = embedding_service.l2_normalize(
         embedding_service.avg_vectors(
             [
                 descriptor.np_vector
-                for descriptor in embedding_service.embed_descriptors(query.descriptors)
+                for descriptor in await embedding_service.embed_descriptors(query.descriptors)
             ]
         )
     )
@@ -151,16 +151,16 @@ def search_by_descriptors(query: DescriptorQuery):
         },
     ]
 
-    results = list(execute_pipeline("fragrances", pipeline))
+    results = await execute_pipeline("fragrances", pipeline)
 
     return {"search_vector": search_vector, "fragrances": results}
 
 
-def search_by_fragrance(query):
+async def search_by_fragrance(query):
     pass
 
 
-def search_by_vector(query):
+async def search_by_vector(query):
     filter_component = build_filter_component(
         query.model_dump(exclude={"search_vector", "descriptors"})
     )
@@ -277,14 +277,6 @@ def search_by_vector(query):
         },
     ]
 
-    results = list(execute_pipeline("fragrances", pipeline))
+    results = await execute_pipeline("fragrances", pipeline)
 
     return {"search_vector": query.search_vector, "fragrances": results}
-
-
-if __name__ == "__main__":
-    sample_query = DescriptorQuery(
-        descriptors=["apple", "fresh", "sweet", "citrus", "vanilla", "lemon", "woody"],
-        popularity=[4, 5],
-    )
-    print((search_by_descriptors(sample_query))["fragrances"])

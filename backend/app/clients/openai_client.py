@@ -1,29 +1,27 @@
-from openai import OpenAI
+from openai import AsyncOpenAI
 import os
 from dotenv import load_dotenv
 from app.config import settings
 import numpy as np
 
 load_dotenv()
-client = OpenAI()
+client = AsyncOpenAI()
 
 MODEL = settings.openai.model
 BATCH_SIZE = settings.etl.batch_size
 DIMENSIONS = settings.openai.dimensions
 
 
-def get_embedding(text: str) -> list[float]:
-    response = client.embeddings.create(input=text, model=MODEL, dimensions=DIMENSIONS)
-    raw_vector = response.data[0].embedding
-    return raw_vector
+async def get_embedding(text: str) -> list[float]:
+    response = await client.embeddings.create(input=text, model=MODEL, dimensions=DIMENSIONS)
+    return response.data[0].embedding
 
 
-def get_many_embeddings(texts: list[str]) -> list[list[float]]:
+async def get_many_embeddings(texts: list[str]) -> list[list[float]]:
     results = []
-
     for start in range(0, len(texts), BATCH_SIZE):
         chunk = texts[start : start + BATCH_SIZE]
-        response = client.embeddings.create(
+        response = await client.embeddings.create(
             input=chunk, model=MODEL, dimensions=DIMENSIONS
         )
         for obj in response.data:

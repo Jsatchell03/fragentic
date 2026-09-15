@@ -2,41 +2,30 @@ from app.clients import mongo_client
 from app.schemas.app_schemas import Descriptor
 from app.schemas.db_schemas import DescriptorDoc, FragranceDoc
 
-STORED_DESCRIPTOR_NAMES = set(
-    descriptor["name"]
-    for descriptor in mongo_client.query_collection(
-        "descriptors", {}, {"name": 1, "_id": 0}
-    )
-)
-
-STORED_FRAGRANCE_URLS = set(
-    fragrance["fragrantica_url"]
-    for fragrance in mongo_client.query_collection(
-        "fragrances", {}, {"fragrantica_url": 1, "_id": 0}
-    )
-)
+STORED_DESCRIPTOR_NAMES: set[str] = set()
+STORED_FRAGRANCE_URLS: set[str] = set()
 
 
-def find_descriptors(names):
+async def find_descriptors(names):
     query = {"name": {"$in": names}}
-    results = mongo_client.query_collection("descriptors", query)
+    results = await mongo_client.query_collection("descriptors", query)
     if results:
         return [
             Descriptor(name=doc["name"], list_vector=doc["vector"])
-            for doc in list(results)
+            for doc in results
         ]
     return []
 
 
-def upload_descriptors(descriptors: list[DescriptorDoc]):
-    mongo_client.upload_many(
+async def upload_descriptors(descriptors: list[DescriptorDoc]):
+    await mongo_client.upload_many(
         "descriptors",
         [descriptor.model_dump(mode="json") for descriptor in descriptors],
     )
 
 
-def upload_fragrances(fragrances: list[FragranceDoc]):
-    mongo_client.upload_many(
+async def upload_fragrances(fragrances: list[FragranceDoc]):
+    await mongo_client.upload_many(
         "fragrances", [fragrance.model_dump(mode="json") for fragrance in fragrances]
     )
 
