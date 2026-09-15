@@ -7,9 +7,7 @@ from app.config import settings
 
 load_dotenv()
 
-r = aioredis.Redis(
-    host="localhost", port=6379, password=os.getenv("REDIS_PW"), decode_responses=False
-)
+r = aioredis.from_url(os.getenv("REDIS_URL"), decode_responses=False)
 
 KEY_PREFIX = settings.redis.key_prefix
 

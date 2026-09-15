@@ -1,0 +1,26 @@
+services:
+  backend-dev:
+    image: ghcr.io/jsatchell03/fragentic-backend:dev
+    container_name: fragentic-backend-dev
+    restart: unless-stopped
+    env_file: .env.dev
+    networks:
+      - shared-net-dev
+
+  frontend-dev:
+    image: ghcr.io/jsatchell03/fragentic-frontend:dev
+    container_name: fragentic-frontend-dev
+    restart: unless-stopped
+    environment:
+      BACKEND_HOST: backend-dev
+      BACKEND_PORT: "8000"
+    ports:
+      - "127.0.0.1:8102:80"
+    depends_on:
+      - backend-dev
+    networks:
+      - shared-net-dev
+
+networks:
+  shared-net-dev:
+    external: true
