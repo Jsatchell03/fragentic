@@ -33,7 +33,9 @@ async def search_by_descriptors(query: DescriptorQuery):
         embedding_service.avg_vectors(
             [
                 descriptor.np_vector
-                for descriptor in await embedding_service.embed_descriptors(query.descriptors)
+                for descriptor in await embedding_service.embed_descriptors(
+                    query.descriptors
+                )
             ]
         )
     )
@@ -152,7 +154,8 @@ async def search_by_descriptors(query: DescriptorQuery):
     ]
 
     results = await execute_pipeline("fragrances", pipeline)
-
+    print(f"{len(results)} Frags Found")
+    print(f"{pipeline} Pipeline ran")
     return {"search_vector": search_vector, "fragrances": results}
 
 

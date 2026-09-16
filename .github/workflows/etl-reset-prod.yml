@@ -1,0 +1,66 @@
+name: ETL Reset Prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type "yes-reset-prod" to confirm'
+        required: true
+
+jobs:
+  etl-reset-prod:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify confirmation
+        if: ${{ github.event.inputs.confirmation != 'yes-reset-prod' }}
+        run: |
+          echo "Confirmation did not match 'yes-reset-prod'. Aborting."
+          exit 1
+
+      - name: Clear DB and run ETL
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 120m
+          script: |
+            echo "=== Clearing MongoDB collections ==="
+            docker exec -i fragentic-backend-prod uv run python3 - <<'PYEOF'
+            import asyncio
+            from motor.motor_asyncio import AsyncIOMotorClient
+            import os
+            async def main():
+                client = AsyncIOMotorClient(os.getenv("MONGO_URI"))
+                db = client["fragentic"]
+                r = await db["fragrances"].delete_many({})
+                print(f"Deleted {r.deleted_count} fragrances")
+                r = await db["descriptors"].delete_many({})
+                print(f"Deleted {r.deleted_count} descriptors")
+                client.close()
+            asyncio.run(main())
+            PYEOF
+
+            echo "=== Clearing Redis cache ==="
+            docker exec -i fragentic-backend-prod uv run python3 - <<'PYEOF'
+            import asyncio
+            import redis.asyncio as aioredis
+            import os
+            async def main():
+                r = aioredis.from_url(os.getenv("REDIS_URL"), decode_responses=True)
+                cursor, deleted = 0, 0
+                while True:
+                    cursor, keys = await r.scan(cursor, match="fragentic:*", count=100)
+                    if keys:
+                        await r.delete(*keys)
+                        deleted += len(keys)
+                    if cursor == 0:
+                        break
+                print(f"Deleted {deleted} Redis keys")
+                await r.aclose()
+            asyncio.run(main())
+            PYEOF
+
+            echo "=== Running ETL pipeline ==="
+            docker exec fragentic-backend-prod uv run python3 -m app.etl_script.etl
+            echo "=== Done ==="
