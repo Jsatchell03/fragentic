@@ -16,7 +16,7 @@ jobs:
           command_timeout: 120m
           script: |
             echo "=== Clearing MongoDB collections ==="
-            docker exec -i fragentic-backend-dev python3 - <<'PYEOF'
+            docker exec -i fragentic-backend-dev uv run python3 - <<'PYEOF'
             import asyncio
             from motor.motor_asyncio import AsyncIOMotorClient
             import os
@@ -32,7 +32,7 @@ jobs:
             PYEOF
 
             echo "=== Clearing Redis cache ==="
-            docker exec -i fragentic-backend-dev python3 - <<'PYEOF'
+            docker exec -i fragentic-backend-dev uv run python3 - <<'PYEOF'
             import asyncio
             import redis.asyncio as aioredis
             import os
@@ -52,5 +52,5 @@ jobs:
             PYEOF
 
             echo "=== Running ETL pipeline ==="
-            docker exec fragentic-backend-dev python3 -m app.etl_script.etl
+            docker exec fragentic-backend-dev uv run python3 -m app.etl_script.etl
             echo "=== Done ==="
