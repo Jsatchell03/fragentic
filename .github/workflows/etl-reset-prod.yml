@@ -69,7 +69,7 @@ jobs:
 
             echo "=== [3/4] Running ETL pipeline (this may take a while, progress logs every 250 rows) ==="
             etl_start=$(date +%s)
-            docker exec fragentic-backend-prod uv run python3 -m app.etl_script.etl
+            docker exec fragentic-backend-prod uv run python3 -u -m app.etl_script.etl
             etl_end=$(date +%s)
             echo "--- ETL pipeline finished at $(date -u '+%H:%M:%S UTC') (took $((etl_end - etl_start))s) ---"
 
