@@ -15,11 +15,19 @@ async def upload_one(collection_name: str, document: dict):
     return response.inserted_id
 
 
-async def upload_many(collection_name: str, documents: list[dict]):
+async def upload_many(collection_name: str, documents: list[dict], batch_size: int = 500):
     if collection_name not in await db.list_collection_names():
         raise ValueError(f"[{collection_name}] does not exist in db.")
     collection = db[collection_name]
-    await collection.insert_many(documents, ordered=False)
+    total = len(documents)
+    total_batches = -(-total // batch_size)  # ceil division
+    for batch_num, i in enumerate(range(0, total, batch_size), start=1):
+        batch = documents[i:i + batch_size]
+        await collection.insert_many(batch, ordered=False)
+        print(
+            f"[{collection_name}] uploaded batch {batch_num}/{total_batches} "
+            f"({min(i + batch_size, total)}/{total} docs)"
+        )
 
 
 async def get_all(collection_name: str) -> list:

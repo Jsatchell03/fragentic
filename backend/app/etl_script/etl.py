@@ -215,15 +215,23 @@ def parse_name(name: str):
     return " ".join(words)
 
 
+PROGRESS_LOG_INTERVAL = 250
+
+
 async def run():
     # --- Main embedding loop ---
-    print("Started Embedding")
+    print(
+        f"Started Embedding: {len(df)} fragrances loaded, "
+        f"{len(added_fragrance_urls)} already in database, "
+        f"{len(added_descriptor_names)} descriptors already cached"
+    )
     start_time = time.time()
+    skipped = 0
 
     for idx, row in tqdm(df.iterrows(), total=len(df), desc="Processing fragrances"):
         url = safe_str(row.get("url"))
         if url in added_fragrance_urls:
-            print(f"{parse_name(row.get("Perfume"))} already in db")
+            skipped += 1
             continue
         fragrance = {}
         fragrance["name"] = parse_name(row.get("Perfume"))
@@ -325,22 +333,43 @@ async def run():
 
         new_fragrances.append(FragranceDoc(**fragrance))
         added_fragrance_urls.add(fragrance["fragrantica_url"])
+
+        if (idx + 1) % PROGRESS_LOG_INTERVAL == 0 or (idx + 1) == len(df):
+            elapsed = time.time() - start_time
+            rate = (idx + 1) / elapsed if elapsed > 0 else 0
+            remaining = len(df) - (idx + 1)
+            eta = remaining / rate if rate > 0 else 0
+            print(
+                f"[progress] {idx + 1}/{len(df)} rows ({(idx + 1) / len(df) * 100:.1f}%) | "
+                f"new_fragrances={len(new_fragrances)} new_descriptors={len(new_descriptors)} "
+                f"skipped={skipped} | elapsed={elapsed:.1f}s rate={rate:.2f} rows/s "
+                f"ETA={eta:.1f}s"
+            )
     end_time = time.time()
 
-    print(f"✅ Processed {len(df)} fragrances in {end_time - start_time:.2f} seconds")
+    print(
+        f"✅ Finished embedding: {len(new_fragrances)} new fragrances, "
+        f"{skipped} already in db, {len(df)} total rows in "
+        f"{end_time - start_time:.2f} seconds"
+    )
 
-    print("Uploading to mongo")
+    print(
+        f"Uploading to mongo: {len(new_descriptors)} descriptors, "
+        f"{len(new_fragrances)} fragrances"
+    )
+    upload_start = time.time()
     if len(new_descriptors) > 0:
         await mongo_service.upload_descriptors(new_descriptors)
-        print("Descriptors uploaded")
+        print(f"Descriptors uploaded ({len(new_descriptors)} docs)")
     else:
         print("No new descriptors")
 
     if len(new_fragrances) > 0:
         await mongo_service.upload_fragrances(new_fragrances)
-        print("Fragrances uploaded")
+        print(f"Fragrances uploaded ({len(new_fragrances)} docs)")
     else:
         print("No new fragrances")
+    print(f"✅ Upload complete in {time.time() - upload_start:.2f} seconds")
 
 
 if __name__ == "__main__":
