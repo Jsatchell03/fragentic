@@ -10,7 +10,7 @@ VECTOR_SEARCH_LIMIT = settings.search.vector_search_limit
 
 def build_filter_component(filters):
     res = []
-    if filters["rating"]:
+    if filters["rating"] is not None:
         res.append({"rating": {"$gte": filters["rating"]}})
     if filters["brands"]:
         res.append({"brand": {"$in": filters["brands"]}})
@@ -154,8 +154,6 @@ async def search_by_descriptors(query: DescriptorQuery):
     ]
 
     results = await execute_pipeline("fragrances", pipeline)
-    print(f"{len(results)} Frags Found")
-    print(f"{pipeline} Pipeline ran")
     return {"search_vector": search_vector, "fragrances": results}
 
 

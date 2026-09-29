@@ -25,6 +25,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 120m
           script: |
+            set -e
+
             echo "=== Clearing MongoDB collections ==="
             docker exec -i fragentic-backend-prod uv run python3 - <<'PYEOF'
             import asyncio
@@ -63,4 +65,22 @@ jobs:
 
             echo "=== Running ETL pipeline ==="
             docker exec fragentic-backend-prod uv run python3 -m app.etl_script.etl
+
+            echo "=== Verifying data was loaded ==="
+            docker exec -i fragentic-backend-prod uv run python3 - <<'PYEOF'
+            import asyncio
+            import sys
+            from motor.motor_asyncio import AsyncIOMotorClient
+            import os
+            async def main():
+                client = AsyncIOMotorClient(os.getenv("MONGO_URI"))
+                db = client["fragentic"]
+                count = await db["fragrances"].count_documents({})
+                print(f"{count} fragrances in DB after ETL")
+                client.close()
+                if count == 0:
+                    sys.exit(1)
+            asyncio.run(main())
+            PYEOF
+
             echo "=== Done ==="
