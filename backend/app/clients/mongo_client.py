@@ -15,11 +15,12 @@ async def upload_one(collection_name: str, document: dict):
     return response.inserted_id
 
 
-async def upload_many(collection_name: str, documents: list[dict]):
+async def upload_many(collection_name: str, documents: list[dict], batch_size: int = 500):
     if collection_name not in await db.list_collection_names():
         raise ValueError(f"[{collection_name}] does not exist in db.")
     collection = db[collection_name]
-    await collection.insert_many(documents, ordered=False)
+    for i in range(0, len(documents), batch_size):
+        await collection.insert_many(documents[i:i + batch_size], ordered=False)
 
 
 async def get_all(collection_name: str) -> list:
