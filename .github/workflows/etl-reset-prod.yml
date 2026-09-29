@@ -25,7 +25,11 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 120m
           script: |
-            echo "=== Clearing MongoDB collections ==="
+            set -e
+
+            echo "=== ETL Reset Prod started at $(date -u '+%Y-%m-%d %H:%M:%S UTC') ==="
+
+            echo "=== [1/4] Clearing MongoDB collections ==="
             docker exec -i fragentic-backend-prod uv run python3 - <<'PYEOF'
             import asyncio
             from motor.motor_asyncio import AsyncIOMotorClient
@@ -40,8 +44,9 @@ jobs:
                 client.close()
             asyncio.run(main())
             PYEOF
+            echo "--- MongoDB clear finished at $(date -u '+%H:%M:%S UTC') ---"
 
-            echo "=== Clearing Redis cache ==="
+            echo "=== [2/4] Clearing Redis cache ==="
             docker exec -i fragentic-backend-prod uv run python3 - <<'PYEOF'
             import asyncio
             import redis.asyncio as aioredis
@@ -60,7 +65,29 @@ jobs:
                 await r.aclose()
             asyncio.run(main())
             PYEOF
+            echo "--- Redis clear finished at $(date -u '+%H:%M:%S UTC') ---"
 
-            echo "=== Running ETL pipeline ==="
-            docker exec fragentic-backend-prod uv run python3 -m app.etl_script.etl
-            echo "=== Done ==="
+            echo "=== [3/4] Running ETL pipeline (this may take a while, progress logs every 250 rows) ==="
+            etl_start=$(date +%s)
+            docker exec fragentic-backend-prod uv run python3 -u -m app.etl_script.etl
+            etl_end=$(date +%s)
+            echo "--- ETL pipeline finished at $(date -u '+%H:%M:%S UTC') (took $((etl_end - etl_start))s) ---"
+
+            echo "=== [4/4] Verifying data was loaded ==="
+            docker exec -i fragentic-backend-prod uv run python3 - <<'PYEOF'
+            import asyncio
+            import sys
+            from motor.motor_asyncio import AsyncIOMotorClient
+            import os
+            async def main():
+                client = AsyncIOMotorClient(os.getenv("MONGO_URI"))
+                db = client["fragentic"]
+                count = await db["fragrances"].count_documents({})
+                print(f"{count} fragrances in DB after ETL")
+                client.close()
+                if count == 0:
+                    sys.exit(1)
+            asyncio.run(main())
+            PYEOF
+
+            echo "=== ETL Reset Prod finished at $(date -u '+%Y-%m-%d %H:%M:%S UTC') ==="
