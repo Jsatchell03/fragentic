@@ -27,7 +27,9 @@ jobs:
           script: |
             set -e
 
-            echo "=== Clearing MongoDB collections ==="
+            echo "=== ETL Reset Prod started at $(date -u '+%Y-%m-%d %H:%M:%S UTC') ==="
+
+            echo "=== [1/4] Clearing MongoDB collections ==="
             docker exec -i fragentic-backend-prod uv run python3 - <<'PYEOF'
             import asyncio
             from motor.motor_asyncio import AsyncIOMotorClient
@@ -42,8 +44,9 @@ jobs:
                 client.close()
             asyncio.run(main())
             PYEOF
+            echo "--- MongoDB clear finished at $(date -u '+%H:%M:%S UTC') ---"
 
-            echo "=== Clearing Redis cache ==="
+            echo "=== [2/4] Clearing Redis cache ==="
             docker exec -i fragentic-backend-prod uv run python3 - <<'PYEOF'
             import asyncio
             import redis.asyncio as aioredis
@@ -62,11 +65,15 @@ jobs:
                 await r.aclose()
             asyncio.run(main())
             PYEOF
+            echo "--- Redis clear finished at $(date -u '+%H:%M:%S UTC') ---"
 
-            echo "=== Running ETL pipeline ==="
+            echo "=== [3/4] Running ETL pipeline (this may take a while, progress logs every 250 rows) ==="
+            etl_start=$(date +%s)
             docker exec fragentic-backend-prod uv run python3 -m app.etl_script.etl
+            etl_end=$(date +%s)
+            echo "--- ETL pipeline finished at $(date -u '+%H:%M:%S UTC') (took $((etl_end - etl_start))s) ---"
 
-            echo "=== Verifying data was loaded ==="
+            echo "=== [4/4] Verifying data was loaded ==="
             docker exec -i fragentic-backend-prod uv run python3 - <<'PYEOF'
             import asyncio
             import sys
@@ -83,4 +90,4 @@ jobs:
             asyncio.run(main())
             PYEOF
 
-            echo "=== Done ==="
+            echo "=== ETL Reset Prod finished at $(date -u '+%Y-%m-%d %H:%M:%S UTC') ==="
